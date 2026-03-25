@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="nurse_dashboard_title">CareCall — Nurse Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Noto+Serif+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="i18n.js"></script>
+<style>
+:root {
+  --bg: #0B1622;
+  --bg2: #111E2E;
+  --bg3: #16273B;
+  --panel: #1A2F45;
+  --border: rgba(80,160,200,0.15);
+  --border2: rgba(255,255,255,0.07);
+  --teal: #00BCD4;
+  --teal2: #00838F;
+  --green: #00E676;
+  --green2: #00C853;
+  --amber: #FFB300;
+  --red: #FF1744;
+  --red2: #FF5252;
+  --purple: #AA00FF;
+  --text: #E8F4F8;
+  --text2: rgba(200,230,245,0.55);
+  --text3: rgba(200,230,245,0.3);
+  --r: 16px;
+  --r-sm: 10px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.45);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; }
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,188,212,0.25); border-radius: 2px; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 200;
+  background: linear-gradient(90deg, #0B1622 0%, #0D1E30 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  height: auto;
+  min-height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--teal);
+}
+.logo img {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+}
+.live-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(0,230,118,0.1);
+  border: 1px solid rgba(0,230,118,0.3);
+  border-radius: 50px;
+  padding: 4px 12px;
+  font-size: 11px; font-weight: 700; color: var(--green);
+}
+.live-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: blink 1.2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
+.topbar-time { font-size: 13px; color: var(--text2); font-family: monospace; }
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  position: sticky; top: 56px; z-index: 190;
+  overflow-x: auto;
+}
+.tabs::-webkit-scrollbar { height: 0; }
+.tab {
+  flex: 1; min-width: 80px;
+  padding: 13px 8px;
+  text-align: center;
+  font-size: 12px; font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+
+/* ── PANES ── */
+.pane { display: none; padding: 16px; }
+.pane.active { display: block; }
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat-box {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 10px;
+  text-align: center;
+}
+.stat-n {
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 28px; font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-n.r { color: var(--red2); }
+.stat-n.a { color: var(--amber); }
+.stat-n.t { color: var(--teal); }
+.stat-n.g { color: var(--green); }
+.stat-l { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── SOS BANNER ── */
+.sos-banner {
+  display: none;
+  background: linear-gradient(90deg, #7B0000, #C62828);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  align-items: center; gap: 12px;
+  animation: flashRed 0.9s infinite alternate;
+}
+.sos-banner.show { display: flex; }
+@keyframes flashRed { from{opacity:1} to{opacity:0.72} }
+.sos-banner-text { font-family: 'Noto Serif Thai', serif; font-size: 15px; font-weight: 700; color: white; flex: 1; }
+
+/* ── FILTER ── */
+.filter-row {
+  display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;
+}
+.filter-label { font-size: 12px; color: var(--text3); margin-right: 4px; }
+.ftab {
+  padding: 6px 14px;
+  border-radius: 50px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-size: 12px; font-weight: 600;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ftab.active { background: var(--teal); border-color: var(--teal); color: #000; }
+
+/* ── REQUEST CARDS ── */
+.req-list { display: flex; flex-direction: column; gap: 10px; }
+.req-card {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.22s;
+  position: relative;
+  overflow: hidden;
+}
+.req-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+}
+.req-card.urgent { border-color: rgba(255,23,68,0.3); }
+.req-card.urgent::before { background: var(--red); }
+.req-card.pending { border-color: rgba(0,188,212,0.2); }
+.req-card.pending::before { background: var(--teal); }
+.req-card.accepted { border-color: rgba(255,179,0,0.2); }
+.req-card.accepted::before { background: var(--amber); }
+.req-card.done { border-color: rgba(0,230,118,0.15); opacity: 0.55; }
+.req-card.done::before { background: var(--green); }
+.req-card:hover { background: #1f3550; transform: translateX(3px); }
+.req-card.urgent.isnew { animation: urgPulse 1.8s infinite; }
+@keyframes urgPulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,23,68,0.5)} 50%{box-shadow:0 0 0 12px rgba(255,23,68,0)} }
+.rc-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+.rc-room { font-family: 'Noto Serif Thai', serif; font-size: 16px; font-weight: 700; color: white; }
+.rc-time { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.rc-badge {
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: 11px; font-weight: 700;
+  white-space: nowrap;
+}
+.rc-badge.urgent { background: rgba(255,23,68,0.15); color: var(--red2); border: 1px solid rgba(255,23,68,0.3); }
+.rc-badge.pending { background: rgba(0,188,212,0.1); color: var(--teal); border: 1px solid rgba(0,188,212,0.25); }
+.rc-badge.accepted { background: rgba(255,179,0,0.1); color: var(--amber); border: 1px solid rgba(255,179,0,0.25); }
+.rc-badge.done { background: rgba(0,230,118,0.08); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+.rc-cat { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.rc-icon { font-size: 20px; }
+.rc-name { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.85); }
+.rc-detail { font-size: 13px; color: var(--text2); line-height: 1.5; }
+.rc-note { font-size: 12px; color: var(--text3); margin-top: 4px; }
+.rc-actions { display: flex; gap: 8px; margin-top: 12px; }
+.rc-act {
+  flex: 1; padding: 8px;
+  border-radius: 8px; border: none;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.rc-act.accept { background: rgba(0,188,212,0.2); color: var(--teal); }
+.rc-act.accept:hover { background: rgba(0,188,212,0.35); }
+.rc-act.done-btn { background: rgba(0,230,118,0.12); color: var(--green); }
+.rc-act.done-btn:hover { background: rgba(0,230,118,0.25); }
+.empty-state { text-align: center; padding: 48px 20px; color: var(--text3); }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+/* ── ROOMS OVERVIEW ── */
+.rooms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.room-overview-card {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.22s;
+  position: relative;
+  overflow: hidden;
+}
+.room-overview-card:hover { background: #1f3550; transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.room-overview-card::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 3px; background: var(--teal); border-radius: 3px 3px 0 0;
+}
+.room-overview-card.has-urgent::after { background: var(--red); }
+.room-overview-card.has-pending::after { background: var(--amber); }
+.roc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.roc-room { font-family: 'Noto Serif Thai', serif; font-size: 18px; font-weight: 700; color: white; }
+.roc-type { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 8px; border-radius: 50px; }
+.roc-type.VIP { background: rgba(170,0,255,0.15); color: #CE93D8; border: 1px solid rgba(170,0,255,0.3); }
+.roc-type.หลังผ่าตัด { background: rgba(255,152,0,0.12); color: var(--amber); border: 1px solid rgba(255,152,0,0.25); }
+.roc-type.ทั่วไป { background: rgba(0,188,212,0.1); color: var(--teal); border: 1px solid rgba(0,188,212,0.2); }
+.roc-type.ICU { background: rgba(255,23,68,0.12); color: var(--red2); border: 1px solid rgba(255,23,68,0.25); }
+.roc-patient { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.85); margin-bottom: 6px; }
+.roc-meta { display: flex; gap: 12px; font-size: 12px; color: var(--text2); flex-wrap: wrap; margin-bottom: 10px; }
+.roc-diag { font-size: 12px; color: var(--teal); margin-bottom: 8px; }
+.roc-req-count { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border-radius: 50px; }
+.roc-req-count.none { background: rgba(255,255,255,0.05); color: var(--text3); }
+.roc-req-count.has { background: rgba(255,23,68,0.12); color: var(--red2); }
+
+/* ── SHEETS ── */
+.sheet-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75); z-index: 800;
+  align-items: flex-end; justify-content: center;
+}
+.sheet-overlay.open { display: flex; animation: fadein 0.2s; }
+@keyframes fadein { from{opacity:0} to{opacity:1} }
+.sheet {
+  background: var(--bg3); border-radius: 24px 24px 0 0;
+  width: 100%; max-width: 640px;
+  max-height: 90vh; overflow-y: auto;
+  padding: 20px; animation: slideup 0.3s ease;
+}
+@keyframes slideup { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.sheet-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 18px; }
+.sheet-close {
+  position: absolute; top: 16px; right: 16px;
+  background: var(--border2); border: none; color: var(--text2);
+  width: 30px; height: 30px; border-radius: 50%;
+  font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── MANAGE PANE ── */
+#pane-manage { padding: 16px; }
+
+.manage-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.manage-title {
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+}
+.manage-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.add-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 50px;
+  border: 1.5px solid var(--teal);
+  background: rgba(0,188,212,0.1); color: var(--teal);
+  font-family: 'Sarabun', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.add-btn:hover { background: rgba(0,188,212,0.2); }
+
+.load-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 50px;
+  border: 1.5px solid var(--amber);
+  background: rgba(255,179,0,0.1); color: var(--amber);
+  font-family: 'Sarabun', sans-serif; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.load-btn:hover { background: rgba(255,179,0,0.2); }
+
+.manage-patient-card {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s;
+}
+.manage-patient-card:hover { background: #1f3550; }
+.manage-patient-info { flex: 1; cursor: pointer; }
+.manage-patient-name { font-family: 'Noto Serif Thai', serif; font-size: 15px; font-weight: 700; color: white; }
+.manage-patient-meta { font-size: 13px; color: var(--text2); margin-top: 3px; }
+.manage-patient-diag { font-size: 12px; color: var(--teal); margin-top: 2px; }
+.manage-patient-btns { display: flex; gap: 8px; align-items: center; }
+
+.btn-icon {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; transition: all 0.2s;
+}
+.btn-edit { background: rgba(0,188,212,0.12); color: var(--teal); border: 1px solid rgba(0,188,212,0.25); }
+.btn-edit:hover { background: rgba(0,188,212,0.25); transform: scale(1.1); }
+.btn-discharge { background: rgba(255,179,0,0.1); color: var(--amber); border: 1px solid rgba(255,179,0,0.3); }
+.btn-discharge:hover { background: rgba(255,179,0,0.2); transform: scale(1.1); }
+.btn-delete { background: rgba(255,23,68,0.1); color: var(--red); border: 1px solid rgba(255,23,68,0.3); }
+.btn-delete:hover { background: rgba(255,23,68,0.2); transform: scale(1.1); }
+
+.discharge-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 50px;
+  font-size: 11px; font-weight: 700;
+  background: rgba(255,179,0,0.1); color: var(--amber);
+  border: 1px solid rgba(255,179,0,0.25);
+  margin-top: 4px;
+}
+
+.manage-section-header {
+  display: flex; align-items: center; gap: 10px;
+  margin: 20px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.manage-section-title {
+  font-size: 13px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.manage-section-count {
+  background: rgba(0,188,212,0.15);
+  color: var(--teal);
+  border: 1px solid rgba(0,188,212,0.25);
+  border-radius: 50px;
+  padding: 2px 8px;
+  font-size: 11px; font-weight: 700;
+}
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-input, .form-select, .form-textarea {
+  padding: 10px 12px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--border);
+  background: var(--bg2); color: var(--text);
+  font-family: 'Sarabun', sans-serif; font-size: 14px;
+  outline: none; transition: border-color 0.2s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--teal); }
+.form-textarea { resize: vertical; min-height: 60px; }
+.form-select option { background: var(--bg2); }
+.save-btn {
+  width: 100%; padding: 14px; border-radius: 50px; border: none;
+  background: linear-gradient(135deg, var(--teal), var(--teal2));
+  color: #000; font-family: 'Noto Serif Thai', serif;
+  font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 4px;
+}
+.delete-btn {
+  width: 100%; padding: 11px; border-radius: 50px;
+  border: 1px solid rgba(255,23,68,0.3); background: transparent;
+  color: var(--red2); font-family: 'Sarabun', sans-serif; font-size: 14px;
+  cursor: pointer; margin-top: 8px; transition: all 0.2s;
+}
+.section-divider { height: 1px; background: var(--border2); margin: 8px 0 16px; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.info-cell { background: rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 12px; }
+.info-cell-l { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+.info-cell-v { font-size: 14px; font-weight: 600; color: var(--text); }
+.req-mini-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.req-mini {
+  background: var(--bg2); border-radius: 10px; padding: 10px 12px;
+  border-left: 3px solid var(--teal); font-size: 13px; color: var(--text2);
+}
+.req-mini.urgent { border-left-color: var(--red2); }
+.req-mini.done { border-left-color: var(--green); opacity: 0.55; }
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 50px; padding: 12px 24px;
+  font-size: 14px; font-weight: 600; color: var(--text);
+  box-shadow: var(--shadow-lg); transition: transform 0.3s ease;
+  z-index: 9999; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ══════════════════════════════════════
+   CCTV PANE
+══════════════════════════════════════ */
+#pane-cctv { padding: 0; }
+
+.cctv-header {
+  padding: 14px 16px 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+  position: sticky; top: 96px; z-index: 100;
+}
+.cctv-header-left { display: flex; align-items: center; gap: 10px; }
+.cctv-title {
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 16px; font-weight: 700; color: white;
+}
+.cctv-live-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(255,23,68,0.15);
+  border: 1px solid rgba(255,23,68,0.35);
+  border-radius: 50px;
+  padding: 3px 10px;
+  font-size: 11px; font-weight: 700; color: var(--red2);
+}
+.cctv-red-dot { width: 6px; height: 6px; background: var(--red); border-radius: 50%; animation: blink 1.2s infinite; }
+
+.cctv-layout-btns { display: flex; gap: 6px; }
+.layout-btn {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 6px; padding: 5px 10px;
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  cursor: pointer; transition: all 0.2s; font-family: 'Sarabun', sans-serif;
+}
+.layout-btn.active { background: rgba(0,188,212,0.15); border-color: var(--teal); color: var(--teal); }
+
+.cam-room-scroll {
+  display: flex; gap: 8px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.cam-room-scroll::-webkit-scrollbar { height: 0; }
+.cam-pill {
+  flex: none;
+  padding: 6px 14px;
+  border-radius: 50px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  font-family: 'Sarabun', sans-serif;
+  white-space: nowrap;
+  position: relative;
+}
+.cam-pill.active { background: rgba(0,188,212,0.15); border-color: var(--teal); color: var(--teal); }
+.cam-pill.has-alert { border-color: rgba(255,23,68,0.4); color: var(--red2); }
+.cam-pill.has-alert.active { background: rgba(255,23,68,0.12); }
+.cam-alert-dot {
+  position: absolute; top: -3px; right: -3px;
+  width: 8px; height: 8px;
+  background: var(--red); border-radius: 50%;
+  border: 1.5px solid var(--bg2);
+  display: none;
+}
+.cam-pill.has-alert .cam-alert-dot { display: block; }
+
+.cam-grid {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  transition: all 0.3s;
+}
+.cam-grid.layout-1 { grid-template-columns: 1fr; }
+.cam-grid.layout-2 { grid-template-columns: 1fr 1fr; }
+.cam-grid.layout-4 { grid-template-columns: 1fr 1fr; }
+
+.cam-card {
+  background: #0A0F18;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cam-card:hover { border-color: rgba(0,188,212,0.3); }
+.cam-card.fullscreen-card {
+  position: fixed; inset: 0; z-index: 500;
+  border-radius: 0; border: none;
+  cursor: default;
+}
+
+.cam-feed {
+  width: 100%;
+  aspect-ratio: 16/9;
+  position: relative;
+  background: #060C14;
+  overflow: hidden;
+}
+.cam-canvas { width: 100%; height: 100%; display: block; }
+
+.cam-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  padding: 8px;
+  pointer-events: none;
+}
+.cam-top-row { display: flex; align-items: flex-start; justify-content: space-between; }
+.cam-room-tag {
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px; font-weight: 700; color: white;
+}
+.cam-status-tag {
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 10px; font-weight: 700;
+}
+.cam-status-tag.ok { background: rgba(0,230,118,0.2); color: var(--green); border: 1px solid rgba(0,230,118,0.35); }
+.cam-status-tag.alert { background: rgba(255,23,68,0.25); color: var(--red2); border: 1px solid rgba(255,23,68,0.4); animation: flashRed 0.8s infinite alternate; }
+.cam-bottom-row { display: flex; align-items: flex-end; justify-content: space-between; }
+.cam-timestamp {
+  background: rgba(0,0,0,0.55);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px; color: rgba(255,255,255,0.6);
+  font-family: monospace;
+}
+.cam-patient-name {
+  background: rgba(0,0,0,0.55);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px; color: rgba(255,255,255,0.75);
+  max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.cam-info-bar {
+  padding: 8px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg3);
+}
+.cam-info-room { font-family: 'Noto Serif Thai', serif; font-size: 13px; font-weight: 700; color: white; }
+.cam-info-meta { font-size: 11px; color: var(--text2); }
+.cam-info-actions { display: flex; gap: 6px; }
+.cam-action-btn {
+  padding: 4px 10px;
+  border-radius: 6px; border: none;
+  font-size: 11px; font-weight: 600; color: var(--teal);
+  background: rgba(0,188,212,0.12);
+  cursor: pointer; font-family: 'Sarabun', sans-serif;
+  transition: all 0.2s;
+}
+.cam-action-btn:hover { background: rgba(0,188,212,0.22); }
+.cam-action-btn.expand { background: transparent; border: 1px solid var(--border); color: var(--text2); pointer-events: all; }
+.cam-action-btn.expand:hover { border-color: var(--teal); color: var(--teal); }
+
+.fullscreen-close {
+  position: absolute; top: 16px; right: 16px;
+  z-index: 10;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 50%;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; color: white;
+  cursor: pointer; pointer-events: all;
+  transition: all 0.2s;
+}
+.fullscreen-close:hover { background: rgba(255,23,68,0.4); }
+
+.cam-empty {
+  text-align: center; padding: 60px 20px;
+  color: var(--text3);
+}
+.cam-empty-icon { font-size: 52px; margin-bottom: 14px; }
+.cam-video { width: 100%; height: 100%; object-fit: cover; }
+
+/* ══════════════════════════════════════
+   CHARTS PANE — HOSPITAL GRADE
+══════════════════════════════════════ */
+#pane-charts { padding: 0 0 24px; }
+
+.charts-header {
+  position: sticky; top: 96px; z-index: 100;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+}
+
+/* Vital signs live ticker row */
+.vital-ticker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  padding: 12px 16px 4px;
+}
+.vital-tick-card {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 10px 12px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+.vital-tick-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  border-radius: 3px 0 0 3px;
+}
+.vital-tick-card.hr::before { background: #FF4D6A; }
+.vital-tick-card.bp::before { background: #00BCD4; }
+.vital-tick-card.temp::before { background: #FFB300; }
+.vital-tick-card.spo2::before { background: #9C6FFF; }
+.vital-tick-room { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+.vital-tick-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+.vital-tick-value { font-family: 'Noto Serif Thai', serif; font-size: 22px; font-weight: 700; line-height: 1; }
+.vital-tick-value.hr { color: #FF4D6A; }
+.vital-tick-value.bp { color: #00BCD4; }
+.vital-tick-value.temp { color: #FFB300; }
+.vital-tick-value.spo2 { color: #9C6FFF; }
+.vital-tick-unit { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.vital-tick-trend { font-size: 10px; margin-top: 2px; }
+.vital-tick-trend.up { color: #FF4D6A; }
+.vital-tick-trend.down { color: #00BCD4; }
+.vital-tick-trend.stable { color: var(--green); }
+.vital-tick-alert { 
+  position: absolute; top: 6px; right: 8px;
+  width: 6px; height: 6px; border-radius: 50%; 
+  background: #FF4D6A; animation: blink 1s infinite;
+  display: none;
+}
+.vital-tick-card.abnormal .vital-tick-alert { display: block; }
+.vital-tick-card.abnormal { border-color: rgba(255,77,106,0.35); }
+
+/* Chart panels */
+.chart-panels { padding: 12px 16px; display: flex; flex-direction: column; gap: 16px; }
+.chart-panel {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.chart-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.chart-panel-title {
+  display: flex; align-items: center; gap: 10px;
+}
+.chart-panel-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  flex-shrink: 0;
+}
+.chart-panel-name {
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 15px; font-weight: 700; color: white;
+}
+.chart-panel-range {
+  font-size: 11px; color: var(--text3); margin-top: 1px;
+}
+.chart-panel-stats {
+  display: flex; gap: 12px;
+  flex-wrap: wrap;
+}
+.chart-stat-pill {
+  display: flex; align-items: center; gap: 5px;
+  padding: 3px 10px;
+  border-radius: 50px;
+  font-size: 11px; font-weight: 600;
+}
+.chart-stat-pill.avg { background: rgba(255,255,255,0.06); color: var(--text2); border: 1px solid var(--border2); }
+.chart-stat-pill.high { background: rgba(255,77,106,0.12); color: #FF7A8F; border: 1px solid rgba(255,77,106,0.2); }
+.chart-stat-pill.low { background: rgba(0,188,212,0.1); color: #60D8EC; border: 1px solid rgba(0,188,212,0.2); }
+.chart-panel-body { padding: 8px 14px 16px; position: relative; }
+
+/* Legend for multi-room charts */
+.chart-legend {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding: 6px 18px 0;
+}
+.chart-legend-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--text2);
+}
+.chart-legend-line {
+  width: 18px; height: 2px; border-radius: 1px;
+}
+.chart-legend-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+
+/* Normal range band label */
+.range-annotation {
+  font-size: 10px; color: var(--text3);
+  position: absolute; right: 20px; bottom: 20px;
+  display: flex; align-items: center; gap: 5px;
+}
+.range-band-swatch {
+  width: 14px; height: 8px;
+  border-radius: 2px;
+  background: rgba(0,230,118,0.12);
+  border: 1px solid rgba(0,230,118,0.2);
+}
+
+/* ── CONFIRM MODAL ── */
+.confirm-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  z-index: 10000;
+  align-items: center; justify-content: center;
+}
+.confirm-overlay.open {
+  display: flex;
+  animation: cfOverlayIn 0.2s ease;
+}
+@keyframes cfOverlayIn { from{opacity:0} to{opacity:1} }
+
+.confirm-modal {
+  background: linear-gradient(145deg, #1A2F45, #16273B);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  padding: 32px 28px 24px;
+  width: calc(100% - 40px); max-width: 360px;
+  text-align: center;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  animation: cfModalIn 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative; overflow: hidden;
+}
+@keyframes cfModalIn {
+  from { transform: scale(0.85) translateY(20px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+.confirm-modal::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px; border-radius: 24px 24px 0 0;
+}
+.confirm-modal.type-discharge::before { background: linear-gradient(90deg, var(--green), var(--teal)); }
+.confirm-modal.type-delete::before    { background: linear-gradient(90deg, var(--red), #FF5252); }
+.confirm-modal.type-withdraw::before  { background: linear-gradient(90deg, var(--amber), #FFD54F); }
+
+.confirm-icon-wrap {
+  width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; margin: 0 auto 18px;
+}
+.type-discharge .confirm-icon-wrap { background: rgba(0,230,118,0.12); border: 2px solid rgba(0,230,118,0.3); }
+.type-delete    .confirm-icon-wrap { background: rgba(255,23,68,0.1);   border: 2px solid rgba(255,23,68,0.3); }
+.type-withdraw  .confirm-icon-wrap { background: rgba(255,179,0,0.1);   border: 2px solid rgba(255,179,0,0.3); }
+
+.confirm-title {
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 20px; font-weight: 700;
+  color: white; margin-bottom: 10px;
+}
+.confirm-desc {
+  font-size: 13px; color: var(--text2);
+  line-height: 1.65; margin-bottom: 8px;
+}
+.confirm-name {
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 15px; font-weight: 700;
+  padding: 8px 16px; border-radius: 50px;
+  margin: 0 auto 22px; display: inline-block;
+}
+.type-discharge .confirm-name { background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.25); }
+.type-delete    .confirm-name { background: rgba(255,23,68,0.1);  color: var(--red2);  border: 1px solid rgba(255,23,68,0.25); }
+.type-withdraw  .confirm-name { background: rgba(255,179,0,0.1);  color: var(--amber); border: 1px solid rgba(255,179,0,0.25); }
+
+.confirm-warning {
+  font-size: 12px; color: rgba(255,179,0,0.8);
+  background: rgba(255,179,0,0.07);
+  border: 1px solid rgba(255,179,0,0.2);
+  border-radius: 10px; padding: 8px 12px;
+  margin-bottom: 22px; text-align: left;
+  display: flex; gap: 8px; align-items: flex-start;
+}
+
+.confirm-btns { display: flex; gap: 10px; }
+
+.cf-btn {
+  flex: 1; padding: 13px;
+  border-radius: 50px; border: none;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.22s;
+}
+.cf-btn-cancel {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text2);
+}
+.cf-btn-cancel:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+
+.cf-btn-confirm-discharge {
+  background: linear-gradient(135deg, var(--green), var(--green2));
+  color: #000;
+}
+.cf-btn-confirm-discharge:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+.cf-btn-confirm-delete {
+  background: linear-gradient(135deg, #C62828, var(--red));
+  color: white;
+}
+.cf-btn-confirm-delete:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+.cf-btn-confirm-withdraw {
+  background: linear-gradient(135deg, var(--amber), #FFD54F);
+  color: #000;
+}
+.cf-btn-confirm-withdraw:hover { filter: brightness(1.1); transform: scale(1.02); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><img src="SilentCare logo design.png" alt="SilentCare Logo" style="height: 100px;"> SilentCare</div>
+  <div class="topbar-time" id="clock">--:--:--</div>
+  <div class="live-pill"><span class="live-dot"></span> LIVE</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('requests', this)">📋 คำร้อง</div>
+  <div class="tab" onclick="switchTab('rooms', this)">🏠 ทุกห้อง</div>
+  <div class="tab" onclick="switchTab('cctv', this)">📹 กล้อง CCTV</div>
+  <div class="tab" onclick="switchTab('charts', this)">📊 กราฟข้อมูล</div>
+  <div class="tab" onclick="switchTab('analytics', this)">📈 สถิติเข้า-ออก</div>
+  <div class="tab" onclick="switchTab('manage', this)">⚙️ จัดการ</div>
+</div>
+
+<!-- ══ REQUESTS PANE ══ -->
+<div id="pane-requests" class="pane active">
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-n r" id="st-urg">0</div><div class="stat-l">🔴 ฉุกเฉิน</div></div>
+    <div class="stat-box"><div class="stat-n a" id="st-pen">0</div><div class="stat-l">🟡 รอดำเนิน</div></div>
+    <div class="stat-box"><div class="stat-n t" id="st-acc">0</div><div class="stat-l">🔵 รับเรื่อง</div></div>
+    <div class="stat-box"><div class="stat-n g" id="st-don">0</div><div class="stat-l">✅ เสร็จ</div></div>
+  </div>
+  <div class="sos-banner" id="sos-banner">
+    <span style="font-size:24px">🚨</span>
+    <div class="sos-banner-text" id="sos-banner-text">SOS ฉุกเฉิน!</div>
+    <button onclick="dismissSOS()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:6px 12px;border-radius:50px;cursor:pointer;font-size:12px">ปิด</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">กรอง:</span>
+    <button class="ftab active" onclick="setFilter('all', this)">ทั้งหมด</button>
+    <button class="ftab" onclick="setFilter('urgent', this)">🔴 ด่วน</button>
+    <button class="ftab" onclick="setFilter('pending', this)">🟡 รอ</button>
+    <button class="ftab" onclick="setFilter('accepted', this)">🔵 รับเรื่อง</button>
+    <button class="ftab" onclick="setFilter('done', this)">✅ เสร็จ</button>
+  </div>
+  <div class="req-list" id="req-list"></div>
+</div>
+
+<!-- ══ ROOMS PANE ══ -->
+<div id="pane-rooms" class="pane">
+  <div class="rooms-grid" id="rooms-grid"></div>
+</div>
+
+<!-- ══ CCTV PANE ══ -->
+<div id="pane-cctv" class="pane" style="padding:0">
+  <div class="cctv-header">
+    <div class="cctv-header-left">
+      <div class="cctv-title">📹 กล้องวงจรปิด</div>
+      <div class="cctv-live-badge"><span class="cctv-red-dot"></span> REC</div>
+    </div>
+    <div class="cctv-layout-btns">
+      <button class="layout-btn active" onclick="setLayout(1,this)" id="lb-1">⬛ 1</button>
+      <button class="layout-btn" onclick="setLayout(2,this)" id="lb-2">⊞ 2</button>
+      <button class="layout-btn" onclick="setLayout(4,this)" id="lb-4">⊡ 4</button>
+    </div>
+  </div>
+  <div class="cam-room-scroll" id="cam-room-scroll"></div>
+  <div class="cam-grid layout-1" id="cam-grid"></div>
+</div>
+
+<!-- ══ CHARTS PANE ══ -->
+<div id="pane-charts" class="pane" style="padding:0">
+  <!-- sticky filters -->
+  <div class="charts-header">
+    <div class="filter-row" style="margin-bottom:8px" id="chart-room-filters">
+      <span class="filter-label">ห้อง:</span>
+      <button class="ftab active" id="cr-all" onclick="setChartRoom('all', this)">ภาพรวม</button>
+      <button class="ftab" id="cr-001" onclick="setChartRoom('001', this)">001</button>
+      <button class="ftab" id="cr-501" onclick="setChartRoom('501', this)">501</button>
+      <button class="ftab" id="cr-502" onclick="setChartRoom('502', this)">502</button>
+      <button class="ftab" id="cr-503" onclick="setChartRoom('503', this)">503</button>
+      <button class="ftab" id="cr-504" onclick="setChartRoom('504', this)">504</button>
+      <button class="ftab" id="cr-505" onclick="setChartRoom('505', this)">505</button>
+    </div>
+    <div class="filter-row" style="margin-bottom:0">
+      <span class="filter-label">ช่วง:</span>
+      <button class="ftab active" id="tr-rt" onclick="setChartTimeRange('realtime',this)">เรียลไทม์</button>
+      <button class="ftab" id="tr-1h" onclick="setChartTimeRange('1h',this)">1 ชม.</button>
+      <button class="ftab" id="tr-6h" onclick="setChartTimeRange('6h',this)">6 ชม.</button>
+      <button class="ftab" id="tr-24h" onclick="setChartTimeRange('24h',this)">24 ชม.</button>
+    </div>
+  </div>
+
+  <!-- Live vitals ticker -->
+  <div class="vital-ticker" id="vital-ticker"></div>
+
+  <!-- Chart panels -->
+  <div class="chart-panels" id="chart-panels">
+
+    <!-- Heart Rate -->
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">
+          <div class="chart-panel-dot" style="background:#FF4D6A"></div>
+          <div>
+            <div class="chart-panel-name">อัตราการเต้นหัวใจ (Heart Rate)</div>
+            <div class="chart-panel-range">ช่วงปกติ: 60 – 100 bpm</div>
+          </div>
+        </div>
+        <div class="chart-panel-stats" id="hr-stats"></div>
+      </div>
+      <div class="chart-legend" id="hr-legend"></div>
+      <div class="chart-panel-body">า+
+        <div style="position:relative;height:200px">
+          <canvas id="heartRateChart"></canvas>
+        </div>
+        <div class="range-annotation"><div class="range-band-swatch"></div> ช่วงปกติ</div>
+      </div>
+    </div>
+
+    <!-- Blood Pressure -->
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">
+          <div class="chart-panel-dot" style="background:#00BCD4"></div>
+          <div>
+            <div class="chart-panel-name">ความดันโลหิต (Blood Pressure)</div>
+            <div class="chart-panel-range">ช่วงปกติ: &lt;120 / &lt;80 mmHg</div>
+          </div>
+        </div>
+        <div class="chart-panel-stats" id="bp-stats"></div>
+      </div>
+      <div class="chart-legend" id="bp-legend"></div>
+      <div class="chart-panel-body">
+        <div style="position:relative;height:200px">
+          <canvas id="bloodPressureChart"></canvas>
+        </div>
+        <div class="range-annotation"><div class="range-band-swatch"></div> ช่วงปกติ</div>
+      </div>
+    </div>
+
+    <!-- Temperature -->
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">
+          <div class="chart-panel-dot" style="background:#FFB300"></div>
+          <div>
+            <div class="chart-panel-name">อุณหภูมิร่างกาย (Temperature)</div>
+            <div class="chart-panel-range">ช่วงปกติ: 36.1 – 37.2 °C</div>
+          </div>
+        </div>
+        <div class="chart-panel-stats" id="temp-stats"></div>
+      </div>
+      <div class="chart-legend" id="temp-legend"></div>
+      <div class="chart-panel-body">
+        <div style="position:relative;height:180px">
+          <canvas id="temperatureChart"></canvas>
+        </div>
+        <div class="range-annotation"><div class="range-band-swatch"></div> ช่วงปกติ</div>
+      </div>
+    </div>
+
+    <!-- SpO2 -->
+    <div class="chart-panel">
+      <div class="chart-panel-header">
+        <div class="chart-panel-title">
+          <div class="chart-panel-dot" style="background:#9C6FFF"></div>
+          <div>
+            <div class="chart-panel-name">ออกซิเจนในเลือด (SpO₂)</div>
+            <div class="chart-panel-range">ช่วงปกติ: 95 – 100 %</div>
+          </div>
+        </div>
+        <div class="chart-panel-stats" id="spo2-stats"></div>
+      </div>
+      <div class="chart-legend" id="spo2-legend"></div>
+      <div class="chart-panel-body">
+        <div style="position:relative;height:180px">
+          <canvas id="spo2Chart"></canvas>
+        </div>
+        <div class="range-annotation"><div class="range-band-swatch"></div> ช่วงปกติ</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ ANALYTICS PANE ══ -->
+<div id="pane-analytics" class="pane">
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px;">
+    <div class="stat-box">
+      <div class="stat-n" style="color: var(--green);" id="total-admitted">0</div>
+      <div class="stat-l">👥 ผู้ป่วยทั้งหมด</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-n" style="color: var(--teal);" id="currently-admitted">0</div>
+      <div class="stat-l">🏥 กำลังรักษา</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-n" style="color: var(--red);" id="total-discharged">0</div>
+      <div class="stat-l">👋 ออกไปแล้ว</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-n" style="color: var(--amber);" id="avg-stay-days">0</div>
+      <div class="stat-l">📅 ระยะเวลาเฉลี่ย</div>
+    </div>
+  </div>
+  <div style="background: var(--panel); border: 1px solid var(--border2); border-radius: var(--r); padding: 16px; margin-bottom: 20px; height: 350px;">
+    <h3 style="margin-bottom: 12px; color: var(--text);">📊 จำนวนเข้า-ออกรายเดือน</h3>
+    <canvas id="admissionChart"></canvas>
+  </div>
+  <div style="background: var(--panel); border: 1px solid var(--border2); border-radius: var(--r); padding: 16px; margin-bottom: 20px; height: 350px;">
+    <h3 style="margin-bottom: 12px; color: var(--text);">⏱️ ความถี่การเข้า-ออกตามเวลา</h3>
+    <canvas id="timelineChart"></canvas>
+  </div>
+  <div style="background: var(--panel); border: 1px solid var(--border2); border-radius: var(--r); padding: 16px; height: 350px;">
+    <h3 style="margin-bottom: 12px; color: var(--text);">🏥 ประเภทผู้ป่วย</h3>
+    <canvas id="typeChart"></canvas>
+  </div>
+</div>
+
+<!-- ══ MANAGE PANE ══ -->
+<div id="pane-manage" class="pane">
+  <div class="manage-top-bar">
+    <div class="manage-title">⚙️ จัดการผู้ป่วย</div>
+    <div class="manage-actions">
+      <button class="add-btn" onclick="openAddPatient()">
+        <span>➕</span> เพิ่มผู้ป่วยใหม่
+      </button>
+      <button class="load-btn" onclick="loadPatients()">
+        <span>🔄</span> โหลดรายชื่อ
+      </button>
+    </div>
+  </div>
+  <div id="manage-list"></div>
+  <div class="manage-section-header" style="margin-top: 24px;">
+    <div class="manage-section-title">🚪 ถอนผู้ป่วยออกด่วน</div>
+  </div>
+  <div style="background: var(--panel); border: 1px solid rgba(255,179,0,0.2); border-radius: var(--r); padding: 16px;">
+    <div style="font-size: 13px; color: var(--text2); margin-bottom: 12px;">กรอกเลขห้องเพื่อถอนผู้ป่วยออกจากระบบอย่างรวดเร็ว</div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <input class="form-input" id="quick-discharge-room" placeholder="เลขห้อง เช่น 501" style="flex:1; max-width:200px;">
+      <button onclick="quickDischargePatient()" style="padding: 10px 20px; border-radius: 50px; border: 1.5px solid var(--amber); background: rgba(255,179,0,0.1); color: var(--amber); font-family: 'Sarabun'; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+        👋 ถอนออก
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL SHEET -->
+<div class="sheet-overlay" id="detail-sheet" onclick="closeSheetOutside(event)">
+  <div class="sheet" id="detail-sheet-inner">
+    <div class="sheet-handle"></div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<!-- FORM SHEET -->
+<div class="sheet-overlay" id="form-sheet" onclick="closeFormOutside(event)">
+  <div class="sheet" style="position:relative">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeFormSheet()">✕</button>
+    <div id="form-content"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+<!-- ── CONFIRM MODAL ── -->
+<div class="confirm-overlay" id="confirm-overlay" onclick="handleConfirmOverlayClick(event)">
+  <div class="confirm-modal" id="confirm-modal">
+    <div class="confirm-icon-wrap" id="confirm-icon">👋</div>
+    <div class="confirm-title" id="confirm-title">ยืนยันการดำเนินการ</div>
+    <div class="confirm-desc" id="confirm-desc"></div>
+    <div class="confirm-name" id="confirm-name"></div>
+    <div class="confirm-warning" id="confirm-warning" style="display:none">
+      <span>⚠️</span><span id="confirm-warning-text"></span>
+    </div>
+    <div class="confirm-btns">
+      <button class="cf-btn cf-btn-cancel" onclick="closeConfirmModal()">ยกเลิก</button>
+      <button class="cf-btn" id="confirm-action-btn" onclick="executeConfirmAction()">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  SHARED STORAGE
+// ══════════════════════════════════════
+const STORE_ROOMS = 'carecall_rooms';
+const STORE_REQS  = 'carecall_requests';
+function getRooms() { try { return JSON.parse(localStorage.getItem(STORE_ROOMS) || '{}'); } catch { return {}; } }
+function getReqs()  { try { return JSON.parse(localStorage.getItem(STORE_REQS)  || '[]'); } catch { return []; } }
+function saveRooms(rooms) { localStorage.setItem(STORE_ROOMS, JSON.stringify(rooms)); }
+function saveReqs(reqs)   { localStorage.setItem(STORE_REQS,  JSON.stringify(reqs)); }
+
+function seedRoomsIfEmpty() {
+  const rooms = getRooms();
+  if (Object.keys(rooms).length === 0) {
+    saveRooms({
+      '001': { room: '001', label: 'ห้อง 001 หลังผ่าตัด', type: 'หลังผ่าตัด', name: 'pottamin', age: 35, dob: '01/01/2534', gender: 'หญิง', weight: 45, height: 125, admit: '24/03/2569', diag: 'ผ่าตัดขั้วหัวใจ', note: '' },
+      '501': { room: '501', label: 'ห้อง 501 VIP', type: 'VIP', name: 'คุณสมชาย ใจดี', age: 62, dob: '15/03/2506', gender: 'ชาย', weight: 72, height: 170, admit: '21/03/2569', diag: 'โรคหัวใจ — หลังผ่าตัด', note: 'แพ้ยา Penicillin' },
+      '502': { room: '502', label: 'ห้อง 502 VIP', type: 'VIP', name: 'คุณสุภาพร รักเรียน', age: 55, dob: '20/08/2512', gender: 'หญิง', weight: 58, height: 160, admit: '22/03/2569', diag: 'ผ่าตัดข้อเข่า', note: '' },
+      '503': { room: '503', label: 'ห้อง 503', type: 'ทั่วไป', name: 'คุณวิชัย มั่นคง', age: 45, dob: '01/01/2524', gender: 'ชาย', weight: 80, height: 175, admit: '20/03/2569', diag: 'ปอดบวม', note: 'เบาหวาน Type 2' },
+      '504': { room: '504', label: 'ห้อง 504 Post-Op', type: 'หลังผ่าตัด', name: 'คุณนภา สวยงาม', age: 38, dob: '10/10/2531', gender: 'หญิง', weight: 52, height: 158, admit: '23/03/2569', diag: 'ผ่าตัดไส้ติ่ง', note: '' },
+      '505': { room: '505', label: 'ห้อง 505 Post-Op', type: 'หลังผ่าตัด', name: 'คุณอนันต์ ขยันทำ', age: 50, dob: '05/05/2519', gender: 'ชาย', weight: 68, height: 168, admit: '22/03/2569', diag: 'ผ่าตัดกระดูกสันหลัง', note: 'ความดันสูง' },
+    });
+  }
+}
+seedRoomsIfEmpty();
+
+// ══════════════════════════════════════
+//  CLOCK & POLLING
+// ══════════════════════════════════════
+function updateClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('th-TH'); }
+setInterval(updateClock, 1000);
+updateClock();
+setInterval(refresh, 2000);
+
+function refresh() {
+  if (document.getElementById('pane-requests').classList.contains('active')) renderRequests();
+  if (document.getElementById('pane-rooms').classList.contains('active')) renderRooms();
+  if (document.getElementById('pane-manage').classList.contains('active')) renderManage();
+  updateStats();
+}
+
+// ══════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════
+let activeTab = 'requests';
+function switchTab(tab, el) {
+  activeTab = tab;
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('pane-' + tab).classList.add('active');
+  el.classList.add('active');
+  if (tab === 'cctv') initCCTV();
+  else if (tab === 'charts') initChartsTab();
+  else if (tab === 'analytics') initAnalyticsCharts();
+  else refresh();
+}
+
+// ══════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════
+function updateStats() {
+  const reqs = getReqs();
+  document.getElementById('st-urg').textContent = reqs.filter(r => r.status === 'urgent').length;
+  document.getElementById('st-pen').textContent = reqs.filter(r => r.status === 'pending').length;
+  document.getElementById('st-acc').textContent = reqs.filter(r => r.status === 'accepted').length;
+  document.getElementById('st-don').textContent = reqs.filter(r => r.status === 'done').length;
+  const sos = reqs.find(r => r.type === 'SOS' && r.status === 'urgent');
+  const banner = document.getElementById('sos-banner');
+  if (sos) {
+    document.getElementById('sos-banner-text').textContent = `🚨 SOS! ${sos.roomLabel} — ${sos.patient} ต้องการความช่วยเหลือด่วน!`;
+    banner.classList.add('show');
+  } else { banner.classList.remove('show'); }
+}
+function dismissSOS() { document.getElementById('sos-banner').classList.remove('show'); }
+
+// ══════════════════════════════════════
+//  REQUESTS
+// ══════════════════════════════════════
+let currentFilter = 'all';
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderRequests();
+}
+function timeAgo(ts) {
+  const d = Math.floor((Date.now() - ts) / 1000);
+  if (d < 60) return `${d} วิที่แล้ว`;
+  if (d < 3600) return `${Math.floor(d/60)} นาทีที่แล้ว`;
+  return `${Math.floor(d/3600)} ชม.ที่แล้ว`;
+}
+const STATUS_LABEL = { urgent: 'ฉุกเฉิน', pending: 'รอดำเนินการ', accepted: 'รับเรื่องแล้ว', done: 'เสร็จแล้ว' };
+
+function renderRequests() {
+  const reqs = getReqs();
+  const filtered = currentFilter === 'all' ? reqs : reqs.filter(r => r.status === currentFilter);
+  const list = document.getElementById('req-list');
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div style="font-size:14px">ไม่มีคำร้อง</div></div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(r => {
+    const isNew = r.isNew ? ' isnew' : '';
+    const extras = r.extras && r.extras.length ? r.extras.join(', ') : '';
+    const actions = r.status !== 'done' ? `
+      <div class="rc-actions">
+        <button class="rc-act accept" onclick="acceptReq(${r.id},event)">✋ รับเรื่อง</button>
+        <button class="rc-act done-btn" onclick="doneReq(${r.id},event)">✅ เสร็จ</button>
+      </div>` : '';
+    return `
+      <div class="req-card ${r.status}${isNew}" onclick="openReqDetail(${r.id})">
+        <div class="rc-top">
+          <div>
+            <div class="rc-room">${r.roomLabel}</div>
+            <div class="rc-time">${r.patient} · ${timeAgo(r.timestamp)}</div>
+          </div>
+          <div class="rc-badge ${r.status}">${STATUS_LABEL[r.status] || r.status}</div>
+        </div>
+        <div class="rc-cat">
+          <span class="rc-icon">${r.catIcon}</span>
+          <span class="rc-name">${r.catName}</span>
+        </div>
+        ${r.detail ? `<div class="rc-detail">${r.detail}</div>` : ''}
+        ${extras ? `<div class="rc-detail">📌 ${extras}</div>` : ''}
+        ${r.note ? `<div class="rc-note">📝 ${r.note}</div>` : ''}
+        ${actions}
+      </div>`;
+  }).join('');
+}
+
+function acceptReq(id, e) {
+  e && e.stopPropagation();
+  const reqs = getReqs();
+  const r = reqs.find(r => r.id === id);
+  if (r && r.status !== 'done') { r.status = 'accepted'; r.isNew = false; saveReqs(reqs); renderRequests(); updateStats(); }
+}
+function doneReq(id, e) {
+  e && e.stopPropagation();
+  const reqs = getReqs();
+  const r = reqs.find(r => r.id === id);
+  if (r) { r.status = 'done'; r.isNew = false; saveReqs(reqs); renderRequests(); updateStats(); showToast('✅ ดำเนินการเสร็จแล้ว'); }
+}
+
+// ══════════════════════════════════════
+//  REQUEST DETAIL
+// ══════════════════════════════════════
+function openReqDetail(id) {
+  const reqs = getReqs();
+  const r = reqs.find(x => x.id === id);
+  if (!r) return;
+  const extras = r.extras && r.extras.length ? r.extras.join(', ') : '—';
+  document.getElementById('detail-content').innerHTML = `
+    <div style="margin-bottom:16px">
+      <div style="font-family:'Noto Serif Thai',serif;font-size:22px;font-weight:700;color:white;margin-bottom:4px">${r.roomLabel}</div>
+      <div style="font-size:14px;color:var(--text2)">👤 ${r.patient}</div>
+    </div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-cell-l">ประเภทคำร้อง</div><div class="info-cell-v">${r.catIcon} ${r.catName}</div></div>
+      <div class="info-cell"><div class="info-cell-l">สถานะ</div><div class="info-cell-v">${STATUS_LABEL[r.status] || r.status}</div></div>
+      <div class="info-cell"><div class="info-cell-l">เวลาแจ้ง</div><div class="info-cell-v">${new Date(r.timestamp).toLocaleTimeString('th-TH')}</div></div>
+      ${r.painLevel ? `<div class="info-cell"><div class="info-cell-l">ระดับปวด</div><div class="info-cell-v">${r.painLevel}/10</div></div>` : ''}
+    </div>
+    ${r.detail ? `<div style="margin-top:10px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">รายละเอียด</div><div style="background:var(--bg2);padding:10px 14px;border-radius:10px;font-size:14px;color:var(--text)">${r.detail}</div></div>` : ''}
+    ${extras !== '—' ? `<div style="margin-top:10px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">ความต้องการเพิ่ม</div><div style="background:var(--bg2);padding:10px 14px;border-radius:10px;font-size:14px;color:var(--text)">${extras}</div></div>` : ''}
+    ${r.note ? `<div style="margin-top:10px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">บันทึกจากผู้ป่วย</div><div style="background:var(--bg2);padding:10px 14px;border-radius:10px;font-size:14px;color:var(--text)">${r.note}</div></div>` : ''}
+    ${r.status !== 'done' ? `
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="acceptReq(${r.id});closeDetailSheet()" style="flex:1;padding:13px;border-radius:50px;border:none;cursor:pointer;background:rgba(0,188,212,0.2);color:var(--teal);font-family:'Sarabun';font-size:14px;font-weight:700">✋ รับเรื่อง</button>
+      <button onclick="doneReq(${r.id});closeDetailSheet()" style="flex:1;padding:13px;border-radius:50px;border:none;cursor:pointer;background:rgba(0,230,118,0.15);color:var(--green);font-family:'Sarabun';font-size:14px;font-weight:700">✅ เสร็จแล้ว</button>
+    </div>` : ''}
+    <button onclick="closeDetailSheet()" style="width:100%;margin-top:10px;padding:11px;border-radius:50px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Sarabun';font-size:14px;cursor:pointer">ปิด</button>
+  `;
+  document.getElementById('detail-sheet').classList.add('open');
+}
+function closeDetailSheet() { document.getElementById('detail-sheet').classList.remove('open'); }
+function closeSheetOutside(e) { if (e.target === document.getElementById('detail-sheet')) closeDetailSheet(); }
+
+// ══════════════════════════════════════
+//  ROOMS OVERVIEW
+// ══════════════════════════════════════
+function renderRooms() {
+  const rooms = getRooms();
+  const reqs = getReqs();
+  const grid = document.getElementById('rooms-grid');
+  const roomArr = Object.values(rooms).sort((a,b) => a.room.localeCompare(b.room));
+  if (roomArr.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🏠</div><div>ยังไม่มีห้องในระบบ</div></div>`;
+    return;
+  }
+  grid.innerHTML = roomArr.map(room => {
+    const roomReqs = reqs.filter(r => r.roomId === room.room && r.status !== 'done');
+    const hasUrgent = roomReqs.some(r => r.status === 'urgent');
+    const hasPending = roomReqs.some(r => r.status === 'pending' || r.status === 'accepted');
+    const extraClass = hasUrgent ? 'has-urgent' : (hasPending ? 'has-pending' : '');
+    const reqBadge = roomReqs.length > 0
+      ? `<div class="roc-req-count has">⚠️ ${roomReqs.length} คำร้องที่รอ</div>`
+      : `<div class="roc-req-count none">✓ ไม่มีคำร้อง</div>`;
+    return `
+      <div class="room-overview-card ${extraClass}" onclick="openRoomDetail('${room.room}')">
+        <div class="roc-top">
+          <div class="roc-room">${room.label}</div>
+          <div class="roc-type ${room.type}">${room.type}</div>
+        </div>
+        <div class="roc-patient">${room.name || '— ว่าง —'}</div>
+        <div class="roc-meta">
+          ${room.age ? `<span>🎂 ${room.age} ปี</span>` : ''}
+          ${room.gender ? `<span>👤 ${room.gender}</span>` : ''}
+          ${room.weight ? `<span>⚖️ ${room.weight} กก.</span>` : ''}
+          ${room.height ? `<span>📏 ${room.height} ซม.</span>` : ''}
+        </div>
+        ${room.diag ? `<div class="roc-diag">🩻 ${room.diag}</div>` : ''}
+        ${reqBadge}
+      </div>`;
+  }).join('');
+}
+
+function openRoomDetail(roomId) {
+  const rooms = getRooms();
+  const room = rooms[roomId];
+  const reqs = getReqs().filter(r => r.roomId === roomId);
+  if (!room) return;
+  const activeReqs = reqs.filter(r => r.status !== 'done');
+  document.getElementById('detail-content').innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div style="font-family:'Noto Serif Thai',serif;font-size:22px;font-weight:700;color:white">${room.label}</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:2px">${room.name}</div>
+      </div>
+      <div class="roc-type ${room.type}">${room.type}</div>
+    </div>
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-cell-l">ชื่อผู้ป่วย</div><div class="info-cell-v">${room.name || '—'}</div></div>
+      <div class="info-cell"><div class="info-cell-l">เพศ / อายุ</div><div class="info-cell-v">${room.gender || '—'} / ${room.age || '—'} ปี</div></div>
+      <div class="info-cell"><div class="info-cell-l">วันเกิด</div><div class="info-cell-v">${room.dob || '—'}</div></div>
+      <div class="info-cell"><div class="info-cell-l">วันรับเข้า</div><div class="info-cell-v">${room.admit || '—'}</div></div>
+      <div class="info-cell"><div class="info-cell-l">น้ำหนัก</div><div class="info-cell-v">${room.weight ? room.weight + ' กก.' : '—'}</div></div>
+      <div class="info-cell"><div class="info-cell-l">ส่วนสูง</div><div class="info-cell-v">${room.height ? room.height + ' ซม.' : '—'}</div></div>
+    </div>
+    ${room.diag ? `<div style="margin-top:8px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">การวินิจฉัย</div><div style="background:var(--bg2);padding:10px 14px;border-radius:10px;font-size:14px;color:var(--teal)">${room.diag}</div></div>` : ''}
+    ${room.note ? `<div style="margin-top:8px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">⚠️ หมายเหตุ</div><div style="background:rgba(255,179,0,0.08);padding:10px 14px;border-radius:10px;font-size:13px;color:var(--amber)">${room.note}</div></div>` : ''}
+    ${activeReqs.length > 0 ? `
+    <div style="margin-top:14px"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:8px">คำร้องที่รอดำเนินการ (${activeReqs.length})</div>
+    <div class="req-mini-list">${activeReqs.map(r => `
+      <div class="req-mini ${r.status}" onclick="openReqDetail(${r.id})">
+        <strong>${r.catIcon} ${r.catName}</strong>${r.detail ? ` — ${r.detail}` : ''}
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${timeAgo(r.timestamp)} · ${STATUS_LABEL[r.status]}</div>
+      </div>`).join('')}</div></div>` : ''}
+    <button onclick="openEditPatient('${roomId}')" style="width:100%;margin-top:16px;padding:12px;border-radius:50px;border:1.5px solid var(--teal);background:rgba(0,188,212,0.1);color:var(--teal);font-family:'Sarabun';font-size:14px;font-weight:700;cursor:pointer">✏️ แก้ไขข้อมูลผู้ป่วย</button>
+    <button onclick="closeDetailSheet()" style="width:100%;margin-top:8px;padding:11px;border-radius:50px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Sarabun';font-size:14px;cursor:pointer">ปิด</button>
+  `;
+  document.getElementById('detail-sheet').classList.add('open');
+}
+
+// ══════════════════════════════════════
+//  MANAGE — RENDER
+// ══════════════════════════════════════
+function renderManage() {
+  const rooms = getRooms();
+  const patientArr = Object.values(rooms).sort((a,b) => a.room.localeCompare(b.room));
+  const list = document.getElementById('manage-list');
+  if (patientArr.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><div>ยังไม่มีข้อมูลผู้ป่วย กดปุ่มเพิ่มผู้ป่วยใหม่ด้านบน</div></div>`;
+    return;
+  }
+  const active = patientArr.filter(p => p.name && !p.discharge);
+  const discharged = patientArr.filter(p => p.discharge);
+  const empty = patientArr.filter(p => !p.name);
+  let html = '';
+  if (active.length > 0) {
+    html += `<div class="manage-section-header"><div class="manage-section-title">🏥 กำลังรักษา</div><div class="manage-section-count">${active.length}</div></div>`;
+    html += active.map(p => renderPatientCard(p)).join('');
+  }
+  if (discharged.length > 0) {
+    html += `<div class="manage-section-header"><div class="manage-section-title">👋 ออกไปแล้ว</div><div class="manage-section-count">${discharged.length}</div></div>`;
+    html += discharged.map(p => renderPatientCard(p)).join('');
+  }
+  if (empty.length > 0) {
+    html += `<div class="manage-section-header"><div class="manage-section-title">🚪 ห้องว่าง</div><div class="manage-section-count">${empty.length}</div></div>`;
+    html += empty.map(p => renderPatientCard(p)).join('');
+  }
+  list.innerHTML = html;
+}
+
+function renderPatientCard(patient) {
+  const isActive = patient.name && !patient.discharge;
+  const isDischarged = !!patient.discharge;
+  const dischargeBadge = isDischarged
+    ? `<div class="discharge-badge">👋 ออก ${patient.discharge} ${patient.dischargeTime || ''}</div>`
+    : '';
+  return `
+    <div class="manage-patient-card">
+      <div class="manage-patient-info" onclick="openEditPatient('${patient.room}')">
+        <div class="manage-patient-name">${patient.name || `ห้อง ${patient.room} (ว่าง)`}</div>
+        <div class="manage-patient-meta">ห้อง ${patient.room} · ${patient.type}${patient.age ? ' · อายุ ' + patient.age + ' ปี' : ''}${patient.gender ? ' · ' + patient.gender : ''}</div>
+        ${patient.diag ? `<div class="manage-patient-diag">🩻 ${patient.diag}</div>` : ''}
+        ${dischargeBadge}
+      </div>
+      <div class="manage-patient-btns">
+        <button class="btn-icon btn-edit" onclick="openEditPatient('${patient.room}')" title="แก้ไข">✏️</button>
+        ${isActive ? `<button class="btn-icon btn-discharge" onclick="dischargePatient('${patient.room}')" title="ปล่อยผู้ป่วย">👋</button>` : ''}
+        <button class="btn-icon btn-delete" onclick="deletePatient('${patient.room}')" title="ลบออก">🗑️</button>
+      </div>
+    </div>`;
+}
+
+function loadPatients() { renderManage(); showToast('🔄 โหลดรายชื่อผู้ป่วยแล้ว'); }
+
+function quickDischargePatient() {
+  const input = document.getElementById('quick-discharge-room');
+  const roomId = input.value.trim();
+  if (!roomId) { showToast('⚠️ กรุณากรอกเลขห้อง'); return; }
+  const rooms = getRooms();
+  if (!rooms[roomId]) { showToast(`⚠️ ไม่พบห้อง ${roomId} ในระบบ`); return; }
+  if (!rooms[roomId].name) { showToast(`⚠️ ห้อง ${roomId} ไม่มีผู้ป่วย`); return; }
+  const patientName = rooms[roomId].name;
+  if (!confirm(`ยืนยันการถอนผู้ป่วย "${patientName}" จากห้อง ${roomId}?\n(จะบันทึกเวลาออกปัจจุบัน)`)) return;
+  doDischarge(roomId);
+  input.value = '';
+}
+
+// ══════════════════════════════════════
+//  MANAGE — FORMS
+// ══════════════════════════════════════
+function openAddPatient() { showPatientForm(null); }
+function openEditPatient(roomId) { closeDetailSheet(); showPatientForm(roomId); }
+
+function showPatientForm(roomId) {
+  const rooms = getRooms();
+  const room = roomId ? rooms[roomId] : {};
+  const isEdit = !!roomId;
+  document.getElementById('form-content').innerHTML = `
+    <div style="font-family:'Noto Serif Thai',serif;font-size:20px;font-weight:700;color:white;margin-bottom:16px">${isEdit ? '✏️ แก้ไขข้อมูลผู้ป่วย' : '➕ เพิ่มผู้ป่วยใหม่'}</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">เลขห้อง</label>
+        <input class="form-input" id="f-room" value="${room.room || ''}" placeholder="เช่น 501" ${isEdit ? 'readonly' : ''}>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ประเภทห้อง</label>
+        <select class="form-select" id="f-type">
+          <option value="VIP" ${room.type==='VIP'?'selected':''}>VIP</option>
+          <option value="ทั่วไป" ${room.type==='ทั่วไป'?'selected':''}>ทั่วไป</option>
+          <option value="หลังผ่าตัด" ${room.type==='หลังผ่าตัด'?'selected':''}>หลังผ่าตัด</option>
+          <option value="ICU" ${room.type==='ICU'?'selected':''}>ICU</option>
+        </select>
+      </div>
+    </div>
+    <div class="section-divider"></div>
+    <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">ข้อมูลผู้ป่วย</div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">ชื่อ-นามสกุล</label>
+        <input class="form-input" id="f-name" value="${room.name || ''}" placeholder="คุณ...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">เพศ</label>
+        <select class="form-select" id="f-gender">
+          <option value="ชาย" ${room.gender==='ชาย'?'selected':''}>ชาย</option>
+          <option value="หญิง" ${room.gender==='หญิง'?'selected':''}>หญิง</option>
+          <option value="อื่นๆ" ${room.gender==='อื่นๆ'?'selected':''}>อื่นๆ</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">อายุ (ปี)</label>
+        <input class="form-input" id="f-age" type="number" value="${room.age || ''}" placeholder="เช่น 55">
+      </div>
+      <div class="form-group">
+        <label class="form-label">วันเกิด (ว/ด/ปปปป)</label>
+        <input class="form-input" id="f-dob" value="${room.dob || ''}" placeholder="01/01/2520">
+      </div>
+      <div class="form-group">
+        <label class="form-label">วันที่รับเข้า</label>
+        <input class="form-input" id="f-admit" value="${room.admit || ''}" placeholder="ว/ด/ปปปป">
+      </div>
+      <div class="form-group">
+        <label class="form-label">เวลาเข้า (ชม:นาที)</label>
+        <input class="form-input" id="f-admit-time" value="${room.admitTime || ''}" placeholder="08:30">
+      </div>
+      <div class="form-group">
+        <label class="form-label">น้ำหนัก (กก.)</label>
+        <input class="form-input" id="f-weight" type="number" value="${room.weight || ''}" placeholder="60">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ส่วนสูง (ซม.)</label>
+        <input class="form-input" id="f-height" type="number" value="${room.height || ''}" placeholder="165">
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">การวินิจฉัย / อาการ</label>
+      <input class="form-input" id="f-diag" value="${room.diag || ''}" placeholder="เช่น ผ่าตัดข้อเข่า">
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label class="form-label">⚠️ หมายเหตุ / ข้อควรระวัง</label>
+      <textarea class="form-textarea" id="f-note" placeholder="เช่น แพ้ยา Penicillin, เบาหวาน...">${room.note || ''}</textarea>
+    </div>
+    <button class="save-btn" onclick="savePatient(${isEdit ? `'${roomId}'` : 'null'})">💾 บันทึกข้อมูล</button>
+    ${isEdit && room.name && !room.discharge ? `<button class="save-btn" style="background:linear-gradient(135deg,var(--green),var(--green2));margin-top:8px" onclick="dischargePatient('${roomId}')">👋 ปล่อยผู้ป่วยแล้ว</button>` : ''}
+    ${isEdit ? `<button class="delete-btn" onclick="deletePatient('${roomId}')">🗑 ลบข้อมูลผู้ป่วยนี้</button>` : ''}
+    <button onclick="closeFormSheet()" style="width:100%;margin-top:8px;padding:11px;border-radius:50px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'Sarabun';font-size:14px;cursor:pointer">ยกเลิก</button>
+  `;
+  document.getElementById('form-sheet').classList.add('open');
+}
+
+function calculateAge(dobStr) {
+  const [day, month, yearThai] = dobStr.split('/').map(Number);
+  if (!day || !month || !yearThai) return null;
+  const yearGreg = yearThai > 2400 ? yearThai - 543 : yearThai;
+  const dob = new Date(yearGreg, month - 1, day);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  if (today.getMonth() < month - 1 || (today.getMonth() === month - 1 && today.getDate() < day)) age--;
+  return age;
+}
+
+function validateDOBandAge() {
+  const dob = document.getElementById('f-dob').value.trim();
+  const age = document.getElementById('f-age').value.trim();
+  if (!dob || !age) return { valid: true, msg: '' };
+  const calcAge = calculateAge(dob);
+  if (calcAge === null) return { valid: false, msg: '⚠️ รูปแบบวันเกิดผิด (ว/ด/ปปปป)' };
+  if (Math.abs(calcAge - parseInt(age)) > 1) {
+    return { valid: false, msg: `⚠️ อายุไม่ตรง! วันเกิดคำนวณได้ ${calcAge} ปี แต่ระบุ ${age} ปี` };
+  }
+  return { valid: true, msg: '' };
+}
+
+function savePatient(existingId) {
+  const roomNum = document.getElementById('f-room').value.trim();
+  const name = document.getElementById('f-name').value.trim();
+  if (!roomNum) { showToast('⚠️ กรุณากรอกเลขห้อง'); return; }
+  if (!name) { showToast('⚠️ กรุณากรอกชื่อผู้ป่วย'); return; }
+  const validation = validateDOBandAge();
+  if (!validation.valid) { showToast(validation.msg); return; }
+  const rooms = getRooms();
+  const roomId = existingId || roomNum;
+  const existingRoom = rooms[roomId] || {};
+  rooms[roomId] = {
+    room: roomNum,
+    label: `ห้อง ${roomNum} ${document.getElementById('f-type').value}`,
+    type: document.getElementById('f-type').value,
+    name,
+    gender: document.getElementById('f-gender').value,
+    age: document.getElementById('f-age').value,
+    dob: document.getElementById('f-dob').value.trim(),
+    admit: document.getElementById('f-admit').value.trim(),
+    admitTime: document.getElementById('f-admit-time').value.trim(),
+    discharge: existingRoom.discharge || '',
+    dischargeTime: existingRoom.dischargeTime || '',
+    weight: document.getElementById('f-weight').value,
+    height: document.getElementById('f-height').value,
+    diag: document.getElementById('f-diag').value.trim(),
+    note: document.getElementById('f-note').value.trim(),
+  };
+  saveRooms(rooms);
+  closeFormSheet();
+  renderManage();
+  renderRooms();
+  showToast('✅ บันทึกข้อมูลผู้ป่วยเรียบร้อย');
+}
+
+function doDischarge(roomId) {
+  const today = new Date();
+  const dateStr = `${String(today.getDate()).padStart(2,'0')}/${String(today.getMonth()+1).padStart(2,'0')}/${today.getFullYear()+543}`;
+  const timeStr = `${String(today.getHours()).padStart(2,'0')}:${String(today.getMinutes()).padStart(2,'0')}`;
+  const rooms = getRooms();
+  rooms[roomId] = { ...rooms[roomId], discharge: dateStr, dischargeTime: timeStr };
+  saveRooms(rooms);
+  closeFormSheet();
+  renderManage();
+  renderRooms();
+  showToast(`👋 ปล่อยผู้ป่วยแล้ว (${dateStr} ${timeStr})`);
+}
+
+function dischargePatient(roomId) {
+  const rooms = getRooms();
+  const room = rooms[roomId];
+  if (!confirm(`ยืนยันการปล่อยผู้ป่วย "${room.name}" จากห้อง ${roomId}?\n(จะบันทึกเวลาออกปัจจุบัน)`)) return;
+  doDischarge(roomId);
+}
+
+function deletePatient(roomId) {
+  const rooms = getRooms();
+  const name = rooms[roomId]?.name || `ห้อง ${roomId}`;
+  if (!confirm(`⚠️ ยืนยันการลบ "${name}"?\nจะลบข้อมูลทั้งหมดและไม่สามารถกู้คืนได้`)) return;
+  delete rooms[roomId];
+  saveRooms(rooms);
+  closeFormSheet();
+  renderManage();
+  renderRooms();
+  showToast('🗑 ลบข้อมูลแล้ว');
+}
+
+function closeFormSheet() { document.getElementById('form-sheet').classList.remove('open'); }
+function closeFormOutside(e) { if (e.target === document.getElementById('form-sheet')) closeFormSheet(); }
+
+// ══════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ══════════════════════════════════════
+//  CCTV SYSTEM
+// ══════════════════════════════════════
+let cctvLayout = 1;
+let cctvSelectedRooms = [];
+let cctvFullscreenRoom = null;
+let cameraStreams = {};
+const cameraRoomMap = { 0: '501', 1: '502', 2: '503', 3: '504', 4: '505' };
+
+function setLayout(n, btn) {
+  cctvLayout = n;
+  document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('cam-grid').className = `cam-grid layout-${n}`;
+  renderCamGrid();
+}
+
+function initCCTV() {
+  const rooms = getRooms();
+  const roomArr = Object.values(rooms).sort((a,b) => a.room.localeCompare(b.room));
+  const scroll = document.getElementById('cam-room-scroll');
+  scroll.innerHTML = '';
+  const allPill = document.createElement('div');
+  allPill.className = 'cam-pill active'; allPill.id = 'cam-pill-all';
+  allPill.textContent = '📹 ทั้งหมด';
+  allPill.onclick = () => selectAllCams();
+  scroll.appendChild(allPill);
+  roomArr.forEach(room => {
+    const reqs = getReqs().filter(r => r.roomId === room.room && r.status !== 'done');
+    const pill = document.createElement('div');
+    pill.className = `cam-pill${reqs.length > 0 ? ' has-alert' : ''}`;
+    pill.id = `cam-pill-${room.room}`;
+    pill.innerHTML = `${room.room}<span class="cam-alert-dot"></span>`;
+    pill.onclick = () => selectSingleCam(room.room);
+    scroll.appendChild(pill);
+  });
+  cctvSelectedRooms = roomArr.map(r => r.room);
+  renderCamGrid();
+}
+
+function selectAllCams() {
+  const rooms = getRooms();
+  cctvSelectedRooms = Object.keys(rooms).sort();
+  document.querySelectorAll('.cam-pill').forEach(p => p.classList.remove('active'));
+  document.getElementById('cam-pill-all').classList.add('active');
+  renderCamGrid();
+}
+
+function selectSingleCam(roomId) {
+  cctvSelectedRooms = [roomId];
+  document.querySelectorAll('.cam-pill').forEach(p => p.classList.remove('active'));
+  const pill = document.getElementById(`cam-pill-${roomId}`);
+  if (pill) pill.classList.add('active');
+  cctvLayout = 1;
+  document.getElementById('cam-grid').className = 'cam-grid layout-1';
+  document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('lb-1').classList.add('active');
+  renderCamGrid();
+}
+
+function renderCamGrid() {
+  const rooms = getRooms();
+  const reqs = getReqs();
+  const grid = document.getElementById('cam-grid');
+  if (Object.keys(rooms).length === 0) {
+    grid.innerHTML = `<div class="cam-empty"><div class="cam-empty-icon">📷</div><div style="font-size:15px;color:var(--text2)">ยังไม่มีห้องในระบบ</div></div>`;
+    return;
+  }
+  const shownRooms = cctvSelectedRooms.filter(id => rooms[id]);
+  grid.innerHTML = shownRooms.map(roomId => {
+    const room = rooms[roomId];
+    const roomReqs = reqs.filter(r => r.roomId === roomId && r.status !== 'done');
+    const hasAlert = roomReqs.some(r => r.status === 'urgent');
+    return `
+      <div class="cam-card" id="camcard-${roomId}">
+        <div class="cam-feed">
+          <video class="cam-video" id="camvideo-${roomId}" autoplay playsinline muted></video>
+          <div class="cam-overlay">
+            <div class="cam-top-row">
+              <div class="cam-room-tag">📹 ${room.label}</div>
+              <div class="cam-status-tag ${hasAlert ? 'alert' : 'ok'}">${hasAlert ? '⚠️ แจ้งเตือน' : '● ปกติ'}</div>
+            </div>
+            <div class="cam-bottom-row">
+              <div class="cam-patient-name">👤 ${room.name}</div>
+              <div class="cam-timestamp" id="camts-${roomId}">--:--:--</div>
+            </div>
+          </div>
+          <button class="fullscreen-close" id="fs-close-${roomId}" style="display:none" onclick="exitFullscreen()">✕</button>
+        </div>
+        <div class="cam-info-bar">
+          <div>
+            <div class="cam-info-room">${room.label}</div>
+            <div class="cam-info-meta">${room.type} · ${room.name}</div>
+          </div>
+          <div class="cam-info-actions">
+            ${roomReqs.length > 0 ? `<button class="cam-action-btn" onclick="switchTab('requests',document.querySelectorAll('.tab')[0])">⚠️ ${roomReqs.length} คำร้อง</button>` : ''}
+            <button class="cam-action-btn expand" onclick="toggleFullscreen('${roomId}')">⛶</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+  startAllCameras(shownRooms);
+}
+
+setInterval(() => {
+  const time = new Date().toLocaleTimeString('th-TH');
+  Object.keys(getRooms()).forEach(roomId => {
+    const el = document.getElementById(`camts-${roomId}`);
+    if (el) el.textContent = time;
+  });
+}, 1000);
+
+async function startAllCameras(roomIds) {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(d => d.kind === 'videoinput');
+    roomIds.forEach(async (roomId) => {
+      const cameraIndex = Object.keys(cameraRoomMap).find(key => cameraRoomMap[key] === roomId);
+      const targetDevice = cameraIndex !== undefined ? videoDevices[cameraIndex] : videoDevices[0];
+      if (!targetDevice) return;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { deviceId: { exact: targetDevice.deviceId }, width: 1280, height: 720 },
+          audio: false
+        });
+        const video = document.getElementById(`camvideo-${roomId}`);
+        if (video) video.srcObject = stream;
+        cameraStreams[roomId] = stream;
+      } catch(err) { console.error(`Camera room ${roomId}:`, err); }
+    });
+  } catch(err) { console.error('Camera error:', err); }
+}
+
+function toggleFullscreen(roomId) {
+  const card = document.getElementById(`camcard-${roomId}`);
+  if (!card) return;
+  if (cctvFullscreenRoom === roomId) { exitFullscreen(); return; }
+  cctvFullscreenRoom = roomId;
+  card.classList.add('fullscreen-card');
+  const closeBtn = document.getElementById(`fs-close-${roomId}`);
+  if (closeBtn) closeBtn.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function exitFullscreen() {
+  if (!cctvFullscreenRoom) return;
+  const card = document.getElementById(`camcard-${cctvFullscreenRoom}`);
+  if (card) card.classList.remove('fullscreen-card');
+  const closeBtn = document.getElementById(`fs-close-${cctvFullscreenRoom}`);
+  if (closeBtn) closeBtn.style.display = 'none';
+  cctvFullscreenRoom = null;
+  document.body.style.overflow = '';
+}
+
+// ══════════════════════════════════════
+//  VITAL SIGNS ENGINE
+// ══════════════════════════════════════
+let vitalSignsData = {};
+let vitalSignsHistory = {};
+
+// Color per room (distinct, readable on dark bg)
+const ROOM_COLORS = {
+  '001': '#FF7043',
+  '002': '#4FC3F7',
+  '003': '#81C784',
+  '004': '#FFD54F',
+  '005': '#CE93D8',
+  '111': '#80DEEA',
+};
+function getRoomColor(roomId) {
+  return ROOM_COLORS[roomId] || '#90A4AE';
+}
+
+// Normal ranges
+const NORMAL_RANGES = {
+  heartRate:   { min: 60, max: 100, label: '60–100 bpm' },
+  systolic:    { min: 90, max: 120, label: '<120 mmHg' },
+  diastolic:   { min: 60, max: 80,  label: '<80 mmHg' },
+  temperature: { min: 36.1, max: 37.2, label: '36.1–37.2 °C' },
+  spo2:        { min: 95, max: 100, label: '95–100 %' },
+};
+
+function isAbnormal(metric, value) {
+  const r = NORMAL_RANGES[metric];
+  if (!r) return false;
+  return value < r.min || value > r.max;
+}
+
+function initVitalSignsData() {
+  const rooms = getRooms();
+  Object.keys(rooms).forEach(roomId => {
+    if (!vitalSignsData[roomId]) {
+      vitalSignsData[roomId] = {
+        heartRate: 70 + Math.random() * 20,
+        systolic: 110 + Math.random() * 20,
+        diastolic: 70 + Math.random() * 10,
+        temperature: 36.5 + Math.random() * 0.8,
+        spo2: 95 + Math.random() * 5
+      };
+    }
+    if (!vitalSignsHistory[roomId]) {
+      vitalSignsHistory[roomId] = { heartRate:[], systolic:[], diastolic:[], temperature:[], spo2:[], timestamps:[] };
+      const now = new Date();
+      for (let i = 0; i < 30; i++) {
+        const t = new Date(now.getTime() - (30 - i) * 5 * 60 * 1000);
+        vitalSignsHistory[roomId].timestamps.push(t);
+        vitalSignsHistory[roomId].heartRate.push(70 + Math.random() * 20);
+        vitalSignsHistory[roomId].systolic.push(110 + Math.random() * 20);
+        vitalSignsHistory[roomId].diastolic.push(70 + Math.random() * 10);
+        vitalSignsHistory[roomId].temperature.push(36.5 + Math.random() * 0.8);
+        vitalSignsHistory[roomId].spo2.push(95 + Math.random() * 5);
+      }
+    }
+  });
+}
+
+function updateVitalSigns() {
+  const rooms = getRooms();
+  const now = new Date();
+  Object.keys(rooms).forEach(roomId => {
+    const d = vitalSignsData[roomId];
+    if (!d) return;
+    d.heartRate    = Math.max(55, Math.min(110, d.heartRate + (Math.random() - 0.5) * 3));
+    d.systolic     = Math.max(90, Math.min(145, d.systolic + (Math.random() - 0.5) * 4));
+    d.diastolic    = Math.max(55, Math.min(95,  d.diastolic + (Math.random() - 0.5) * 2));
+    d.temperature  = Math.max(35.5, Math.min(38.5, d.temperature + (Math.random() - 0.5) * 0.12));
+    d.spo2         = Math.max(88, Math.min(100, d.spo2 + (Math.random() - 0.5) * 1.2));
+    const h = vitalSignsHistory[roomId];
+    if (!h) return;
+    h.heartRate.push(d.heartRate); h.systolic.push(d.systolic); h.diastolic.push(d.diastolic);
+    h.temperature.push(d.temperature); h.spo2.push(d.spo2); h.timestamps.push(now);
+    const MAX = 120;
+    if (h.heartRate.length > MAX) {
+      ['heartRate','systolic','diastolic','temperature','spo2','timestamps'].forEach(k => h[k].shift());
+    }
+  });
+}
+
+// ══════════════════════════════════════
+//  CHARTS — HOSPITAL GRADE
+// ══════════════════════════════════════
+let charts = {};
+let analyticsCharts = {};
+let currentChartRoom = 'all';
+let currentTimeRange = 'realtime';
+
+// Shared chart defaults
+function baseChartOptions(yMin, yMax, normalMin, normalMax, unit) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 400, easing: 'easeInOutQuart' },
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#0D1E30',
+        borderColor: 'rgba(0,188,212,0.3)',
+        borderWidth: 1,
+        titleColor: 'rgba(200,230,245,0.9)',
+        bodyColor: 'rgba(200,230,245,0.65)',
+        padding: 10,
+        cornerRadius: 10,
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)} ${unit}`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+        ticks: {
+          color: 'rgba(200,230,245,0.35)',
+          font: { size: 10, family: 'Sarabun' },
+          maxTicksLimit: 8,
+          maxRotation: 0,
+        },
+        border: { display: false }
+      },
+      y: {
+        min: yMin, max: yMax,
+        grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+        ticks: {
+          color: 'rgba(200,230,245,0.35)',
+          font: { size: 10, family: 'Sarabun' },
+          maxTicksLimit: 6,
+          callback: v => v.toFixed(0)
+        },
+        border: { display: false }
+      }
+    }
+  };
+}
+
+// Normal range band plugin
+function normalBandPlugin(normalMin, normalMax, color) {
+  return {
+    id: 'normalBand',
+    beforeDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      if (!chartArea) return;
+      const yTop    = scales.y.getPixelForValue(normalMax);
+      const yBottom = scales.y.getPixelForValue(normalMin);
+      ctx.save();
+      ctx.fillStyle = color || 'rgba(0,230,118,0.07)';
+      ctx.fillRect(chartArea.left, yTop, chartArea.right - chartArea.left, yBottom - yTop);
+      // subtle border lines
+      ctx.strokeStyle = 'rgba(0,230,118,0.18)';
+      ctx.lineWidth = 0.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(chartArea.left, yTop); ctx.lineTo(chartArea.right, yTop);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(chartArea.left, yBottom); ctx.lineTo(chartArea.right, yBottom);
+      ctx.stroke();
+      ctx.restore();
+    }
+  };
+}
+
+function makeDataset(roomId, data, color, label, isDashed) {
+  return {
+    label: label || `ห้อง ${roomId}`,
+    data,
+    borderColor: color,
+    backgroundColor: 'transparent',
+    borderWidth: isDashed ? 2 : 1.8,
+    borderDash: isDashed ? [6, 3] : [],
+    pointRadius: 0,
+    pointHoverRadius: 5,
+    pointHoverBackgroundColor: color,
+    pointHoverBorderColor: '#fff',
+    pointHoverBorderWidth: 2,
+    tension: 0.38,
+    fill: false,
+  };
+}
+
+function makeAvgDataset(data, labels) {
+  return {
+    label: 'ค่าเฉลี่ย',
+    data,
+    borderColor: '#FFFFFF',
+    backgroundColor: 'transparent',
+    borderWidth: 2.5,
+    borderDash: [5, 4],
+    pointRadius: 0,
+    pointHoverRadius: 6,
+    pointHoverBackgroundColor: '#FFFFFF',
+    tension: 0.38,
+    fill: false,
+    order: 0,
+  };
+}
+
+function getMaxPoints() {
+  if (currentTimeRange === '1h') return 12;
+  if (currentTimeRange === '6h') return 40;
+  if (currentTimeRange === '24h') return 80;
+  return 20; // realtime
+}
+
+function getHistorySlice(history, metric) {
+  const n = getMaxPoints();
+  const arr = history[metric];
+  const ts  = history.timestamps;
+  const start = Math.max(0, arr.length - n);
+  return { vals: arr.slice(start), times: ts.slice(start) };
+}
+
+function buildChartData(metric, isAll) {
+  const rooms = getRooms();
+  const roomIds = isAll ? Object.keys(rooms).sort() : [currentChartRoom];
+
+  let labels = null;
+  const datasets = [];
+  const allVals = []; // for average
+
+  roomIds.forEach(roomId => {
+    const history = vitalSignsHistory[roomId];
+    if (!history || !history.timestamps.length) return;
+    const { vals, times } = getHistorySlice(history, metric);
+    if (!labels) {
+      labels = times.map(t => t.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    }
+    vals.forEach((v, i) => {
+      if (!allVals[i]) allVals[i] = [];
+      allVals[i].push(v);
+    });
+    const color = getRoomColor(roomId);
+    datasets.push(makeDataset(roomId, vals, color, `ห้อง ${roomId}`));
+  });
+
+  // Average line (only in all-rooms mode)
+  if (isAll && allVals.length > 0) {
+    const avgVals = allVals.map(arr => arr.reduce((s,v) => s+v, 0) / arr.length);
+    datasets.unshift(makeAvgDataset(avgVals, labels));
+  }
+
+  return { labels: labels || [], datasets };
+}
+
+function initMainCharts() {
+  if (typeof Chart === 'undefined') return;
+  if (charts.heartRate) { 
+    [charts.heartRate, charts.bloodPressure, charts.temperature, charts.spo2].forEach(c => c.destroy());
+    charts = {};
+  }
+
+  charts.heartRate = new Chart(
+    document.getElementById('heartRateChart'),
+    {
+      type: 'line',
+      data: { labels: [], datasets: [] },
+      options: baseChartOptions(45, 130, 60, 100, 'bpm'),
+      plugins: [ normalBandPlugin(60, 100, 'rgba(0,230,118,0.07)') ]
+    }
+  );
+
+  charts.bloodPressure = new Chart(
+    document.getElementById('bloodPressureChart'),
+    {
+      type: 'line',
+      data: { labels: [], datasets: [] },
+      options: baseChartOptions(50, 160, 90, 120, 'mmHg'),
+      plugins: [ normalBandPlugin(90, 120, 'rgba(0,188,212,0.07)') ]
+    }
+  );
+
+  charts.temperature = new Chart(
+    document.getElementById('temperatureChart'),
+    {
+      type: 'line',
+      data: { labels: [], datasets: [] },
+      options: baseChartOptions(35.0, 39.0, 36.1, 37.2, '°C'),
+      plugins: [ normalBandPlugin(36.1, 37.2, 'rgba(255,179,0,0.08)') ]
+    }
+  );
+
+  charts.spo2 = new Chart(
+    document.getElementById('spo2Chart'),
+    {
+      type: 'line',
+      data: { labels: [], datasets: [] },
+      options: baseChartOptions(85, 102, 95, 100, '%'),
+      plugins: [ normalBandPlugin(95, 100, 'rgba(156,111,255,0.1)') ]
+    }
+  );
+}
+
+function updateLegend(containerId, datasets) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = datasets.map(ds => {
+    const isAvg = ds.label === 'ค่าเฉลี่ย';
+    return `<div class="chart-legend-item">
+      <div class="chart-legend-line" style="background:${ds.borderColor};opacity:${isAvg ? 1 : 0.8};${isAvg ? 'border-top:2px dashed '+ds.borderColor+';background:transparent;height:0' : ''}"></div>
+      <span style="color:${ds.borderColor};font-weight:${isAvg ? 700 : 400}">${ds.label}</span>
+    </div>`;
+  }).join('');
+}
+
+function updateStatsPills(containerId, vals, unit, decimals) {
+  const el = document.getElementById(containerId);
+  if (!el || !vals.length) return;
+  const avg = vals.reduce((s,v)=>s+v,0)/vals.length;
+  const max = Math.max(...vals);
+  const min = Math.min(...vals);
+  el.innerHTML = `
+    <div class="chart-stat-pill avg">เฉลี่ย ${avg.toFixed(decimals)} ${unit}</div>
+    <div class="chart-stat-pill high">สูงสุด ${max.toFixed(decimals)}</div>
+    <div class="chart-stat-pill low">ต่ำสุด ${min.toFixed(decimals)}</div>
+  `;
+}
+
+function updateCharts() {
+  if (!charts.heartRate) return;
+  const isAll = currentChartRoom === 'all';
+  const rooms = getRooms();
+
+  // Heart Rate
+  const hrData = buildChartData('heartRate', isAll);
+  charts.heartRate.data = hrData;
+  charts.heartRate.update('none');
+  updateLegend('hr-legend', hrData.datasets);
+  const hrVals = hrData.datasets.filter(d=>d.label!=='ค่าเฉลี่ย').flatMap(d=>d.data);
+  updateStatsPills('hr-stats', hrVals, 'bpm', 0);
+
+  // Blood Pressure — systolic
+  const sysDiaBoth = [];
+  const bpDs = [];
+  const roomIds = isAll ? Object.keys(rooms).sort() : [currentChartRoom];
+  let bpLabels = null;
+  const bpAllSys = [];
+  roomIds.forEach(roomId => {
+    const history = vitalSignsHistory[roomId];
+    if (!history || !history.timestamps.length) return;
+    const { vals: sysVals, times } = getHistorySlice(history, 'systolic');
+    const { vals: diaVals } = getHistorySlice(history, 'diastolic');
+    if (!bpLabels) bpLabels = times.map(t => t.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    const color = getRoomColor(roomId);
+    bpDs.push(makeDataset(roomId, sysVals, color, `${roomId} SYS`));
+    // Diastolic as slightly transparent version
+    const diaColor = color + 'AA';
+    bpDs.push({...makeDataset(roomId, diaVals, diaColor, `${roomId} DIA`), borderWidth: 1.2 });
+    sysVals.forEach((v,i) => { if(!bpAllSys[i]) bpAllSys[i]=[]; bpAllSys[i].push(v); });
+  });
+  if (isAll && bpAllSys.length > 0) {
+    const bpAvg = bpAllSys.map(arr => arr.reduce((s,v)=>s+v,0)/arr.length);
+    bpDs.unshift(makeAvgDataset(bpAvg));
+  }
+  charts.bloodPressure.data = { labels: bpLabels || [], datasets: bpDs };
+  charts.bloodPressure.update('none');
+  updateLegend('bp-legend', bpDs);
+  const bpVals = bpDs.filter(d=>!d.label.includes('DIA')&&d.label!=='ค่าเฉลี่ย').flatMap(d=>d.data);
+  updateStatsPills('bp-stats', bpVals, 'mmHg', 0);
+
+  // Temperature
+  const tempData = buildChartData('temperature', isAll);
+  charts.temperature.data = tempData;
+  charts.temperature.update('none');
+  updateLegend('temp-legend', tempData.datasets);
+  const tempVals = tempData.datasets.filter(d=>d.label!=='ค่าเฉลี่ย').flatMap(d=>d.data);
+  updateStatsPills('temp-stats', tempVals, '°C', 1);
+
+  // SpO2
+  const spo2Data = buildChartData('spo2', isAll);
+  charts.spo2.data = spo2Data;
+  charts.spo2.update('none');
+  updateLegend('spo2-legend', spo2Data.datasets);
+  const spo2Vals = spo2Data.datasets.filter(d=>d.label!=='ค่าเฉลี่ย').flatMap(d=>d.data);
+  updateStatsPills('spo2-stats', spo2Vals, '%', 1);
+}
+
+// ── VITAL TICKER ──
+function renderVitalTicker() {
+  const rooms = getRooms();
+  const ticker = document.getElementById('vital-ticker');
+  if (!ticker) return;
+  const roomIds = currentChartRoom === 'all'
+    ? Object.keys(rooms).sort()
+    : [currentChartRoom];
+
+  ticker.innerHTML = roomIds.map(roomId => {
+    const d = vitalSignsData[roomId];
+    if (!d) return '';
+    const room = rooms[roomId];
+    const name = room ? room.name.split(' ')[0] : roomId;
+    const hrAbnormal = isAbnormal('heartRate', d.heartRate);
+    const spo2Abnormal = isAbnormal('spo2', d.spo2);
+    const tempAbnormal = isAbnormal('temperature', d.temperature);
+
+    return `
+      <div class="vital-tick-card hr${hrAbnormal ? ' abnormal' : ''}">
+        <div class="vital-tick-alert"></div>
+        <div class="vital-tick-room">ห้อง ${roomId}</div>
+        <div class="vital-tick-label">Heart Rate</div>
+        <div class="vital-tick-value hr">${Math.round(d.heartRate)}</div>
+        <div class="vital-tick-unit">bpm</div>
+        <div class="vital-tick-trend ${hrAbnormal ? 'up' : 'stable'}">${hrAbnormal ? '⚠ นอกช่วงปกติ' : '✓ ปกติ'}</div>
+      </div>
+      <div class="vital-tick-card bp">
+        <div class="vital-tick-room">ห้อง ${roomId}</div>
+        <div class="vital-tick-label">Blood Pressure</div>
+        <div class="vital-tick-value bp">${Math.round(d.systolic)}/${Math.round(d.diastolic)}</div>
+        <div class="vital-tick-unit">mmHg</div>
+      </div>
+      <div class="vital-tick-card temp${tempAbnormal ? ' abnormal' : ''}">
+        <div class="vital-tick-alert"></div>
+        <div class="vital-tick-room">ห้อง ${roomId}</div>
+        <div class="vital-tick-label">Temperature</div>
+        <div class="vital-tick-value temp">${d.temperature.toFixed(1)}</div>
+        <div class="vital-tick-unit">°C</div>
+        <div class="vital-tick-trend ${tempAbnormal ? 'up' : 'stable'}">${tempAbnormal ? '⚠ ไข้' : '✓ ปกติ'}</div>
+      </div>
+      <div class="vital-tick-card spo2${spo2Abnormal ? ' abnormal' : ''}">
+        <div class="vital-tick-alert"></div>
+        <div class="vital-tick-room">ห้อง ${roomId}</div>
+        <div class="vital-tick-label">SpO₂</div>
+        <div class="vital-tick-value spo2">${d.spo2.toFixed(1)}</div>
+        <div class="vital-tick-unit">%</div>
+        <div class="vital-tick-trend ${spo2Abnormal ? 'down' : 'stable'}">${spo2Abnormal ? '⚠ ต่ำ' : '✓ ปกติ'}</div>
+      </div>`;
+  }).join('');
+}
+
+function refreshChartRoomButtons() {
+  const container = document.getElementById('chart-room-filters');
+  if (!container) return;
+  const rooms = Object.keys(getRooms()).sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
+  let html = `<span class="filter-label">ห้อง:</span>`;
+  html += `<button class="ftab${currentChartRoom==='all' ? ' active' : ''}" id="cr-all" onclick="setChartRoom('all', this)">ภาพรวม</button>`;
+  rooms.forEach(roomId => {
+    html += `<button class="ftab${currentChartRoom===roomId ? ' active' : ''}" id="cr-${roomId}" onclick="setChartRoom('${roomId}', this)">${roomId}</button>`;
+  });
+  container.innerHTML = html;
+}
+
+function setChartRoom(roomId, btn) {
+  currentChartRoom = roomId;
+  refreshChartRoomButtons();
+  renderVitalTicker();
+  updateCharts();
+}
+
+function setChartTimeRange(range, btn) {
+  currentTimeRange = range;
+  document.querySelectorAll('#pane-charts .filter-row').forEach((row, i) => {
+    if (i === 1) row.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  });
+  btn.classList.add('active');
+  updateCharts();
+}
+
+function initChartsTab() {
+  initVitalSignsData();
+  if (!charts.heartRate) initMainCharts();
+  refreshChartRoomButtons();
+  renderVitalTicker();
+  updateCharts();
+}
+
+// ══════════════════════════════════════
+//  ANALYTICS
+// ══════════════════════════════════════
+function initAnalyticsCharts() {
+  const rooms = getRooms();
+  const roomsArr = Object.values(rooms);
+  const totalAdmitted = roomsArr.filter(r => r.admit).length;
+  const currentlyAdmitted = roomsArr.filter(r => r.admit && !r.discharge).length;
+  const discharged = roomsArr.filter(r => r.discharge).length;
+  let avgStayDays = 0, stayCount = 0;
+  roomsArr.forEach(r => {
+    if (r.admit && r.discharge) {
+      const admit = parseDate(r.admit), discharge = parseDate(r.discharge);
+      if (admit && discharge) { avgStayDays += Math.floor((discharge-admit)/(1000*60*60*24)); stayCount++; }
+    }
+  });
+  if (stayCount > 0) avgStayDays = Math.round(avgStayDays/stayCount);
+  document.getElementById('total-admitted').textContent = totalAdmitted;
+  document.getElementById('currently-admitted').textContent = currentlyAdmitted;
+  document.getElementById('total-discharged').textContent = discharged;
+  document.getElementById('avg-stay-days').textContent = avgStayDays + ' วัน';
+
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const admitted = new Array(12).fill(0), dis = new Array(12).fill(0);
+  roomsArr.forEach(r => {
+    if (r.admit) { const d = parseDate(r.admit); if (d) admitted[d.getMonth()]++; }
+    if (r.discharge) { const d = parseDate(r.discharge); if (d) dis[d.getMonth()]++; }
+  });
+
+  const mkOpts = () => ({ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'rgba(200,230,245,0.55)'}}}, scales:{ y:{beginAtZero:true,ticks:{color:'rgba(200,230,245,0.3)'},grid:{color:'rgba(0,188,212,0.1)'}}, x:{ticks:{color:'rgba(200,230,245,0.3)'},grid:{color:'rgba(0,188,212,0.1)'}} } });
+
+  if (analyticsCharts.admission) analyticsCharts.admission.destroy();
+  analyticsCharts.admission = new Chart(document.getElementById('admissionChart').getContext('2d'), { type:'bar', data:{ labels:months, datasets:[{ label:'เข้าโรงพยาบาล', data:admitted, backgroundColor:'rgba(0,230,118,0.7)', borderColor:'#00E676', borderWidth:2 },{ label:'ออกจากโรงพยาบาล', data:dis, backgroundColor:'rgba(255,23,68,0.7)', borderColor:'#FF1744', borderWidth:2 }] }, options:mkOpts() });
+
+  const hours = Array.from({length:24},(_,i)=>`${i}:00`), hCounts = new Array(24).fill(0);
+  roomsArr.forEach(r => { if (r.admitTime) { const h = parseInt(r.admitTime.split(':')[0]); if (h>=0&&h<24) hCounts[h]++; } });
+  if (analyticsCharts.timeline) analyticsCharts.timeline.destroy();
+  analyticsCharts.timeline = new Chart(document.getElementById('timelineChart').getContext('2d'), { type:'line', data:{ labels:hours, datasets:[{ label:'จำนวนการเข้ารับการรักษา', data:hCounts, borderColor:'#00BCD4', backgroundColor:'rgba(0,188,212,0.1)', tension:0.4, fill:true }] }, options:mkOpts() });
+
+  const types = {}; roomsArr.forEach(r => { if (r.type) types[r.type]=(types[r.type]||0)+1; });
+  if (analyticsCharts.type) analyticsCharts.type.destroy();
+  analyticsCharts.type = new Chart(document.getElementById('typeChart').getContext('2d'), { type:'doughnut', data:{ labels:Object.keys(types), datasets:[{ data:Object.values(types), backgroundColor:['rgba(0,230,118,0.8)','rgba(0,188,212,0.8)','rgba(255,179,0,0.8)','rgba(170,0,255,0.8)'] }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'rgba(200,230,245,0.55)'}}} } });
+}
+
+function parseDate(dateStr) {
+  if (!dateStr) return null;
+  const [day, month, yearThai] = dateStr.split('/').map(Number);
+  if (!day || !month || !yearThai) return null;
+  const yearGreg = yearThai > 2400 ? yearThai - 543 : yearThai;
+  return new Date(yearGreg, month - 1, day);
+}
+
+// ── CONFIRM MODAL ENGINE ──
+let _confirmCallback = null;
+
+function openConfirmModal({ type, icon, title, desc, name, warning, btnLabel, onConfirm }) {
+  const overlay = document.getElementById('confirm-overlay');
+  const modal   = document.getElementById('confirm-modal');
+  const btn     = document.getElementById('confirm-action-btn');
+  modal.className = `confirm-modal type-${type}`;
+  document.getElementById('confirm-icon').textContent  = icon;
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-desc').textContent  = desc;
+  document.getElementById('confirm-name').textContent  = name;
+  const warnEl = document.getElementById('confirm-warning');
+  const warnTx = document.getElementById('confirm-warning-text');
+  if (warning) { warnEl.style.display = 'flex'; warnTx.textContent = warning; }
+  else          { warnEl.style.display = 'none'; }
+  btn.className = `cf-btn cf-btn-confirm-${type}`;
+  btn.textContent = btnLabel;
+  _confirmCallback = onConfirm;
+  overlay.classList.add('open');
+}
+
+function closeConfirmModal() {
+  document.getElementById('confirm-overlay').classList.remove('open');
+  _confirmCallback = null;
+}
+
+function executeConfirmAction() {
+  closeConfirmModal();
+  if (_confirmCallback) _confirmCallback();
+}
+
+function handleConfirmOverlayClick(e) {
+  if (e.target === document.getElementById('confirm-overlay')) closeConfirmModal();
+}
+
+// แทนที่ฟังก์ชันเดิมทั้ง 3 ตัวนี้:
+function dischargePatient(roomId) {
+  const rooms = getRooms();
+  const room = rooms[roomId];
+  openConfirmModal({
+    type: 'discharge',
+    icon: '👋',
+    title: 'ปล่อยผู้ป่วยออก',
+    desc: 'ระบบจะบันทึกเวลาออกณ ขณะนี้ และย้ายผู้ป่วยไปยังรายการออกโรงพยาบาล',
+    name: `${room.name}  ·  ห้อง ${roomId}`,
+    warning: null,
+    btnLabel: '👋 ยืนยันปล่อยออก',
+    onConfirm: () => doDischarge(roomId),
+  });
+}
+
+function deletePatient(roomId) {
+  const rooms = getRooms();
+  const name = rooms[roomId]?.name || `ห้อง ${roomId}`;
+  openConfirmModal({
+    type: 'delete',
+    icon: '🗑',
+    title: 'ลบข้อมูลผู้ป่วย',
+    desc: 'ข้อมูลทั้งหมดจะถูกลบออกจากระบบ',
+    name: `${name}  ·  ห้อง ${roomId}`,
+    warning: 'การดำเนินการนี้ไม่สามารถกู้คืนได้ กรุณาตรวจสอบก่อนยืนยัน',
+    btnLabel: '🗑 ยืนยันลบถาวร',
+    onConfirm: () => {
+      const rooms = getRooms();
+      delete rooms[roomId];
+      saveRooms(rooms);
+      closeFormSheet();
+      renderManage();
+      renderRooms();
+      showToast('🗑 ลบข้อมูลแล้ว');
+    },
+  });
+}
+
+function quickDischargePatient() {
+  const input = document.getElementById('quick-discharge-room');
+  const roomId = input.value.trim();
+  if (!roomId) { showToast('⚠️ กรุณากรอกเลขห้อง'); return; }
+  const rooms = getRooms();
+  if (!rooms[roomId]) { showToast(`⚠️ ไม่พบห้อง ${roomId} ในระบบ`); return; }
+  if (!rooms[roomId].name) { showToast(`⚠️ ห้อง ${roomId} ไม่มีผู้ป่วย`); return; }
+  const patientName = rooms[roomId].name;
+  openConfirmModal({
+    type: 'withdraw',
+    icon: '🚪',
+    title: 'ถอนผู้ป่วยออกด่วน',
+    desc: 'ระบบจะบันทึกเวลาออกณ ขณะนี้ทันที',
+    name: `${patientName}  ·  ห้อง ${roomId}`,
+    warning: null,
+    btnLabel: '🚪 ยืนยันถอนออก',
+    onConfirm: () => {
+      doDischarge(roomId);
+      input.value = '';
+    },
+  });
+}
+
+// ══════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════
+renderRequests();
+updateStats();
+initVitalSignsData();
+renderManage();
+
+setInterval(() => {
+  updateVitalSigns();
+  if (activeTab === 'charts') {
+    renderVitalTicker();
+    updateCharts();
+  }
+}, 5000);
+</script>
+</body>
+</html>

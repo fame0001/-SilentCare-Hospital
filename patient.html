@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title data-i18n="title">CareCall — แจ้งพยาบาล</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Noto+Serif+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F0EB;
+  --cream: #FDF8F3;
+  --warm1: #C8956C;
+  --warm2: #A0714F;
+  --warm3: #7A5230;
+  --teal: #2A7F7F;
+  --teal2: #1D5C5C;
+  --red: #C0392B;
+  --red2: #96281B;
+  --green: #27AE60;
+  --text: #2C1810;
+  --text2: #6B4C3B;
+  --border: rgba(168,126,89,0.2);
+  --card: #FFFFFF;
+  --shadow: 0 4px 20px rgba(100,60,20,0.10);
+  --shadow-lg: 0 10px 40px rgba(100,60,20,0.18);
+  --r: 18px;
+  --r-sm: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── LOGIN SCREEN ── */
+#login-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(160deg, #F5F0EB 0%, #EDE0D0 100%);
+}
+.login-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+.login-logo img {
+  height: 120px;
+  width: auto;
+  object-fit: contain;
+}
+.login-logo-text {
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--teal2);
+}
+.login-tagline { font-size: 16px; color: var(--text2); margin-bottom: 40px; font-weight: 500; }
+.login-card {
+  background: var(--card);
+  border-radius: 24px;
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border);
+}
+.login-title { font-family: 'Noto Serif Thai', serif; font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.login-sub { font-size: 15px; color: var(--text2); margin-bottom: 24px; }
+.field-label { font-size: 14px; font-weight: 600; color: var(--warm3); margin-bottom: 8px; display: block; }
+.field-select, .field-input {
+  width: 100%;
+  padding: 15px 18px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--border);
+  font-family: 'Sarabun', sans-serif;
+  font-size: 16px;
+  background: var(--cream);
+  color: var(--text);
+  outline: none;
+  margin-bottom: 18px;
+  transition: border-color 0.2s;
+  appearance: none;
+}
+.field-select:focus, .field-input:focus { border-color: var(--teal); }
+.login-btn {
+  width: 100%;
+  padding: 18px;
+  border-radius: 50px;
+  border: none;
+  background: linear-gradient(135deg, var(--teal), var(--teal2));
+  color: white;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(42,127,127,0.4);
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.login-btn:active { transform: scale(0.98); }
+.no-room-msg { font-size: 13px; color: var(--text2); text-align: center; margin-top: 16px; }
+
+/* ── MAIN APP ── */
+#app-screen { display: none; min-height: 100vh; }
+
+/* Header */
+.app-header {
+  background: linear-gradient(135deg, var(--teal2) 0%, var(--teal) 100%);
+  padding: 20px 20px 28px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.app-header::before {
+  content: '';
+  position: absolute; top: -50px; right: -30px;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+}
+.header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.room-chip {
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 50px;
+  padding: 5px 14px;
+  font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 6px;
+}
+.pulse-green { width: 7px; height: 7px; background: #5DFDCB; border-radius: 50%; animation: bpulse 2s infinite; }
+@keyframes bpulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.5);opacity:0.5} }
+.logout-btn {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50px;
+  padding: 5px 12px;
+  font-size: 12px; color: rgba(255,255,255,0.8);
+  cursor: pointer;
+}
+.patient-greeting { font-family: 'Noto Serif Thai', serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.patient-info-bar { font-size: 12px; opacity: 0.75; display: flex; gap: 10px; flex-wrap: wrap; }
+.patient-info-bar span { display: flex; align-items: center; gap: 3px; }
+
+/* Sections */
+.section { padding: 16px 16px 0; }
+.sec-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--warm2);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* SOS */
+.sos-btn {
+  width: 100%;
+  padding: 22px 16px;
+  border-radius: 20px;
+  border: none;
+  background: linear-gradient(135deg, #E74C3C, var(--red2));
+  color: white;
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 20px; font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  box-shadow: 0 6px 28px rgba(192,57,43,0.50);
+  transition: all 0.2s;
+  position: relative; overflow: hidden;
+  margin-bottom: 16px;
+}
+.sos-btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 20px;
+  box-shadow: 0 0 0 0 rgba(192,57,43,0.6);
+  animation: sosPulse 2s infinite;
+}
+@keyframes sosPulse { 0%{box-shadow:0 0 0 0 rgba(192,57,43,0.5)} 70%{box-shadow:0 0 0 16px rgba(192,57,43,0)} 100%{box-shadow:0 0 0 0 rgba(192,57,43,0)} }
+.sos-btn:active { transform: scale(0.97); }
+.sos-shake { font-size: 28px; animation: headShake 3s ease infinite; }
+@keyframes headShake { 0%,80%,100%{transform:rotate(0)} 82%,86%{transform:rotate(-12deg)} 84%,88%{transform:rotate(12deg)} }
+
+/* Category Grid */
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.cat-btn {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px 12px 14px;
+  border: 2px solid transparent;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: all 0.22s;
+  position: relative; overflow: hidden;
+}
+.cat-btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.cat-btn:active { transform: scale(0.96); }
+.cat-btn.sel { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(42,127,127,0.12); }
+.cat-btn.sel::before { opacity: 1; background: rgba(42,127,127,0.06); }
+.cat-emoji { font-size: 34px; transition: transform 0.25s; }
+.cat-btn.sel .cat-emoji { transform: scale(1.15); }
+.cat-label { font-family: 'Sarabun', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); text-align: center; }
+.cat-desc { font-size: 11px; color: var(--text2); text-align: center; }
+
+/* Sub Options */
+.sub-panel {
+  background: var(--card);
+  border-radius: 16px;
+  overflow: hidden;
+  max-height: 0; opacity: 0;
+  transition: max-height 0.4s ease, opacity 0.3s;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.sub-panel.open { max-height: 500px; opacity: 1; }
+.sub-inner { padding: 14px; }
+.sub-header { font-size: 13px; font-weight: 700; color: var(--teal2); margin-bottom: 10px; }
+.sub-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.sub-chip {
+  padding: 8px 14px;
+  border-radius: 50px;
+  border: 1.5px solid var(--border);
+  font-size: 13px;
+  cursor: pointer;
+  background: var(--cream);
+  color: var(--text);
+  transition: all 0.2s;
+}
+.sub-chip.sel { background: var(--teal); border-color: var(--teal); color: white; }
+
+/* Pain scale */
+.pain-row { display: flex; gap: 5px; flex-wrap: wrap; }
+.pain-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  background: var(--cream);
+  transition: all 0.2s;
+}
+.pain-btn:hover { transform: scale(1.1); }
+.pain-btn.p1,.pain-btn.p2,.pain-btn.p3 { color: #27AE60; border-color: #A9DFBF; }
+.pain-btn.p4,.pain-btn.p5,.pain-btn.p6 { color: #E67E22; border-color: #FAD7A0; }
+.pain-btn.p7,.pain-btn.p8 { color: #D35400; border-color: #EDBB99; }
+.pain-btn.p9,.pain-btn.p10 { color: #C0392B; border-color: #F1948A; }
+.pain-btn.sel { background: currentColor; color: white !important; transform: scale(1.15); }
+
+/* Extra needs */
+.extra-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px; }
+.extra-btn {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 12px 8px;
+  border: 1.5px solid var(--border);
+  display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+  cursor: pointer;
+  font-size: 12px; font-weight: 600; color: var(--text2);
+  text-align: center;
+  transition: all 0.2s;
+}
+.extra-btn .e-icon { font-size: 26px; }
+.extra-btn.sel { border-color: var(--warm1); background: #FEF5EE; color: var(--warm3); }
+
+/* Note */
+.note-area {
+  width: 100%;
+  padding: 13px 15px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  font-family: 'Sarabun', sans-serif;
+  font-size: 15px;
+  background: var(--card);
+  color: var(--text);
+  resize: none;
+  outline: none;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.note-area:focus { border-color: var(--teal); }
+.note-area::placeholder { color: #B5A898; }
+
+/* Audio Recording */
+.record-section {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--border);
+}
+.record-title { font-size: 13px; font-weight: 700; color: var(--teal2); margin-bottom: 12px; }
+.record-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.record-btn, .stop-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 12px 16px;
+  border-radius: 50px;
+  border: none;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.record-btn {
+  background: linear-gradient(135deg, #E74C3C, var(--red2));
+  color: white;
+  box-shadow: 0 4px 16px rgba(192,57,43,0.30);
+}
+.record-btn:active { transform: scale(0.97); }
+.record-btn.recording {
+  animation: recordingPulse 1s infinite;
+}
+@keyframes recordingPulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(192,57,43,0.30); }
+  50% { box-shadow: 0 4px 24px rgba(192,57,43,0.60); }
+}
+.stop-btn {
+  background: linear-gradient(135deg, #95A5A6, #7F8C8D);
+  color: white;
+  box-shadow: 0 4px 16px rgba(127,140,141,0.30);
+}
+.stop-btn:active { transform: scale(0.97); }
+.stop-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.audio-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  min-width: 60px;
+  text-align: right;
+}
+.audio-wave {
+  width: 100%;
+  height: 60px;
+  background: rgba(42,127,127,0.06);
+  border-radius: 12px;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.audio-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 100%;
+  width: 100%;
+}
+.audio-bar {
+  width: 3px;
+  background: linear-gradient(135deg, var(--teal), var(--teal2));
+  border-radius: 2px;
+  animation: waveBarAnimation 0.6s ease-in-out infinite;
+}
+@keyframes waveBarAnimation {
+  0%, 100% { height: 20%; }
+  50% { height: 80%; }
+}
+.recording-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--warm2);
+}
+.recording-dot {
+  width: 8px;
+  height: 8px;
+  background: #C0392B;
+  border-radius: 50%;
+  animation: recordingDotPulse 1s infinite;
+}
+@keyframes recordingDotPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.audio-playback {
+  margin-top: 12px;
+  display: none;
+}
+.audio-playback.show { display: block; }
+.audio-player {
+  width: 100%;
+  padding: 12px;
+  border-radius: 50px;
+  border: 1.5px solid var(--border);
+  background: var(--cream);
+}
+.audio-controls-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.delete-audio-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-family: 'Sarabun', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.delete-audio-btn:hover {
+  background: #FEF5EE;
+  border-color: var(--warm1);
+  color: var(--warm3);
+}
+
+/* Send */
+.send-section { padding: 8px 16px 36px; }
+.send-btn {
+  width: 100%;
+  padding: 18px;
+  border-radius: 50px;
+  border: none;
+  background: linear-gradient(135deg, var(--warm1), var(--warm3));
+  color: white;
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 18px; font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(160,113,79,0.45);
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  transition: all 0.2s;
+}
+.send-btn:active { transform: scale(0.98); }
+.send-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Success overlay */
+.success-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: linear-gradient(160deg, #1D5C5C 0%, #2A7F7F 100%);
+  z-index: 900;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 32px;
+}
+.success-overlay.show { display: flex; animation: fadeScale 0.35s cubic-bezier(0.175,0.885,0.32,1.275); }
+@keyframes fadeScale { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
+.s-icon { font-size: 80px; }
+.s-title { font-family: 'Noto Serif Thai', serif; font-size: 26px; font-weight: 700; color: white; text-align: center; }
+.s-sub { font-size: 15px; color: rgba(255,255,255,0.75); text-align: center; line-height: 1.7; }
+.s-back {
+  margin-top: 10px;
+  padding: 13px 36px;
+  border-radius: 50px;
+  border: 2px solid rgba(255,255,255,0.35);
+  background: transparent;
+  color: white;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* Bottom space */
+.spacer { height: 20px; }
+</style>
+<script src="i18n.js"></script>
+</head>
+<body>
+
+<!-- ─── LOGIN ─── -->
+<div id="login-screen">
+  <div class="login-logo">
+    <img src="SilentCare logo design.png" alt="SilentCare Logo">
+    <div class="login-logo-text">SilentCare</div>
+  </div>
+  <div class="login-tagline" data-i18n="login_tagline">ระบบแจ้งพยาบาล — เพื่อท่านผู้ป่วย</div>
+
+  <div class="login-card">
+    <div class="login-title" data-i18n="login_title">เข้าสู่ระบบห้องของท่าน</div>
+    <div class="login-sub" data-i18n="login_sub">กรุณาเลือกห้องและยืนยันข้อมูล</div>
+
+    <label class="field-label" data-i18n="select_room_label">🚪 เลือกห้อง</label>
+    <select class="field-select" id="login-room">
+      <option value="" data-i18n="select_room_placeholder">— เลือกห้องพัก —</option>
+    </select>
+
+    <label class="field-label" data-i18n="dob_label">🔑 รหัสยืนยัน (วันเกิด ว/ด/ป เช่น 01/01/2530)</label>
+    <input class="field-input" type="text" id="login-dob" data-i18n-placeholder="dob_placeholder" placeholder="ว/ด/ปปปป เช่น 15/06/2510" maxlength="10">
+
+    <button class="login-btn" onclick="doLogin()">
+      <span>🔓</span> <span data-i18n="login_button">เข้าห้องพักของฉัน</span>
+    </button>
+    <div class="no-room-msg" id="login-err" style="display:none;color:#C0392B;"></div>
+    <div class="no-room-msg" data-i18n="no_room_msg">หากห้องไม่พบในรายการ กรุณาติดต่อพยาบาล</div>
+  </div>
+</div>
+
+<!-- ─── APP ─── -->
+<div id="app-screen">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-top">
+      <div class="room-chip">
+        <span class="pulse-green"></span>
+        <span id="h-room" data-i18n="room_prefix">ห้อง —</span>
+      </div>
+      <button class="logout-btn" data-i18n="logout_button" onclick="doLogout()">ออกจากระบบ</button>
+    </div>
+    <div class="patient-greeting" id="h-name" data-i18n="greeting_male">สวัสดีครับ</div>
+    <div class="patient-info-bar" id="h-info"></div>
+  </div>
+
+  <!-- SOS -->
+  <div class="section">
+    <div class="sec-title" data-i18n="emergency_section">⚡ ฉุกเฉิน</div>
+    <button class="sos-btn" onclick="sendSOS()">
+      <span class="sos-shake">🆘</span>
+      <span data-i18n="sos_button">กดเพื่อเรียกด่วน SOS</span>
+    </button>
+  </div>
+
+  <!-- Categories -->
+  <div class="section">
+    <div class="sec-title" data-i18n="request_section">💬 แจ้งความต้องการ</div>
+    <div class="cat-grid">
+      <div class="cat-btn" id="cat-pain" onclick="toggleCat('pain')">
+        <span class="cat-emoji">😣</span>
+        <span class="cat-label" data-i18n="pain_category">ปวด / ไม่สบาย</span>
+        <span class="cat-desc" data-i18n="pain_desc">บอกระดับความปวด</span>
+      </div>
+      <div class="cat-btn" id="cat-food" onclick="toggleCat('food')">
+        <span class="cat-emoji">🍱</span>
+        <span class="cat-label" data-i18n="food_category">น้ำ / อาหาร</span>
+        <span class="cat-desc" data-i18n="food_desc">ขอน้ำหรืออาหาร</span>
+      </div>
+      <div class="cat-btn" id="cat-toilet" onclick="toggleCat('toilet')">
+        <span class="cat-emoji">🚿</span>
+        <span class="cat-label" data-i18n="toilet_category">ห้องน้ำ / ผ้า</span>
+        <span class="cat-desc" data-i18n="toilet_desc">ต้องการความช่วยเหลือ</span>
+      </div>
+      <div class="cat-btn" id="cat-med" onclick="toggleCat('med')">
+        <span class="cat-emoji">💊</span>
+        <span class="cat-label" data-i18n="med_category">ยา / หัตถการ</span>
+        <span class="cat-desc" data-i18n="med_desc">ถามเรื่องยา</span>
+      </div>
+      <div class="cat-btn" id="cat-pos" onclick="toggleCat('pos')">
+        <span class="cat-emoji">🛏</span>
+        <span class="cat-label" data-i18n="position_category">ปรับท่านอน</span>
+        <span class="cat-desc" data-i18n="position_desc">ช่วยพลิกตัว/ที่นอน</span>
+      </div>
+      <div class="cat-btn" id="cat-device" onclick="toggleCat('device')">
+        <span class="cat-emoji">🔌</span>
+        <span class="cat-label" data-i18n="device_category">อุปกรณ์ / IV</span>
+        <span class="cat-desc" data-i18n="device_desc">น้ำเกลือ, สาย, เครื่อง</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub Panel -->
+  <div style="padding: 0 16px;">
+    <div class="sub-panel" id="sub-panel">
+      <div class="sub-inner" id="sub-inner"></div>
+    </div>
+  </div>
+
+  <!-- Extra Quick Needs -->
+  <div class="section">
+    <div class="sec-title" data-i18n="extra_section">✨ ความต้องการเพิ่มเติม</div>
+    <div class="extra-grid">
+      <div class="extra-btn" onclick="toggleExtra(this,'cold')"><span class="e-icon">❄️</span><span data-i18n="extra_cold">ผ้าห่ม/เย็น</span></div>
+      <div class="extra-btn" onclick="toggleExtra(this,'light')"><span class="e-icon">💡</span><span data-i18n="extra_light">ไฟ/ม่าน</span></div>
+      <div class="extra-btn" onclick="toggleExtra(this,'quiet')"><span class="e-icon">🔇</span><span data-i18n="extra_quiet">ลดเสียง</span></div>
+      <div class="extra-btn" onclick="toggleExtra(this,'phone')"><span class="e-icon">📱</span><span data-i18n="extra_phone">ชาร์จโทรศัพท์</span></div>
+      <div class="extra-btn" onclick="toggleExtra(this,'doctor')"><span class="e-icon">🩺</span><span data-i18n="extra_doctor">ขอพบแพทย์</span></div>
+      <div class="extra-btn" onclick="toggleExtra(this,'family')"><span class="e-icon">👨‍👩‍👧</span><span data-i18n="extra_family">แจ้งญาติ</span></div>
+      <div class="extra-btn" onclick="toggleExtra(this,'tv')"><span class="e-icon">📺</span><span data-i18n="extra_tv">TV/รีโมท</span></div>
+      <div class="extra-btn" onclick="toggleExtra(this,'anxiety')"><span class="e-icon">😰</span><span data-i18n="extra_anxiety">กังวล/กลัว</span></div>
+      <div class="extra-btn" onclick="toggleExtra(this,'religious')"><span class="e-icon">🙏</span><span data-i18n="extra_religious">ต้องการกำลังใจ</span></div>
+    </div>
+  </div>
+
+  <!-- Note -->
+  <div class="section">
+    <div class="sec-title" data-i18n="note_section">✏️ บอกรายละเอียดเพิ่ม</div>
+    <textarea class="note-area" id="note-area" rows="3" data-i18n-placeholder="note_placeholder" placeholder="พิมพ์บอกพยาบาลได้เลย เช่น ปวดบริเวณไหน รู้สึกยังไง..."></textarea>
+  </div>
+
+  <!-- Audio Recording -->
+  <div class="section">
+    <div class="sec-title" data-i18n="audio_section">🎙️ อัดเสียงพูดบอก</div>
+    <div class="record-section">
+      <div class="record-title" data-i18n="audio_title">บันทึกเสียง</div>
+      <div class="record-controls">
+        <button id="record-btn" class="record-btn" onclick="startRecording()">
+          <span>🔴</span> <span data-i18n="record_button">อัดเสียง</span>
+        </button>
+        <button id="stop-btn" class="stop-btn" onclick="stopRecording()" disabled style="display:none;">
+          <span>⏹️</span> <span data-i18n="stop_button">หยุดอัด</span>
+        </button>
+        <div class="audio-time" id="audio-time">0:00</div>
+      </div>
+      <div id="recording-indicator-container" style="display:none; margin-top: 12px;">
+        <div class="recording-indicator">
+          <div class="recording-dot"></div>
+          <span data-i18n="recording_live">กำลังอัดเสียง...</span>
+        </div>
+      </div>
+      <div id="audio-wave-container" class="audio-wave" style="display:none;">
+        <div class="audio-bars" id="audio-bars"></div>
+      </div>
+      <div class="audio-playback" id="audio-playback">
+        <audio id="audio-player" class="audio-player" controls></audio>
+        <div class="audio-controls-group">
+          <button class="delete-audio-btn" onclick="deleteAudioRecording()" data-i18n="delete_audio">🗑️ ลบการบันทึก</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="send-section">
+    <button class="send-btn" id="send-btn" onclick="sendRequest()">
+      <span>📨</span> <span data-i18n="send_button">แจ้งพยาบาล</span>
+    </button>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<!-- Success Overlay -->
+<div class="success-overlay" id="success-overlay">
+  <div class="s-icon">✅</div>
+  <div class="s-title" data-i18n="success_title">พยาบาลรับทราบแล้ว!</div>
+  <div class="s-sub" data-i18n="success_sub">ระบบได้แจ้งเตือนพยาบาลทันที<br>กรุณารอสักครู่ จะมีพยาบาลมาดูแลท่าน</div>
+  <button class="s-back" data-i18n="back_button" onclick="closeSuccess()">← กลับหน้าหลัก</button>
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  SHARED DATA via localStorage
+// ══════════════════════════════════════
+const STORE_ROOMS = 'carecall_rooms';
+const STORE_REQS  = 'carecall_requests';
+
+function getRooms() {
+  try { return JSON.parse(localStorage.getItem(STORE_ROOMS) || '{}'); } catch { return {}; }
+}
+function getReqs() {
+  try { return JSON.parse(localStorage.getItem(STORE_REQS) || '[]'); } catch { return []; }
+}
+function saveReqs(reqs) {
+  localStorage.setItem(STORE_REQS, JSON.stringify(reqs));
+  // fire storage event manually for same-tab detection
+  window.dispatchEvent(new Event('carecall_update'));
+}
+
+// ══════════════════════════════════════
+//  DEFAULT ROOMS (seeded if empty)
+// ══════════════════════════════════════
+function seedRoomsIfEmpty() {
+  const rooms = getRooms();
+  if (Object.keys(rooms).length === 0) {
+    const defaultRooms = {
+      '501': { room: '501', label: 'ห้อง 501 VIP', type: 'VIP', name: 'คุณสมชาย ใจดี', age: 62, dob: '15/03/2506', gender: 'ชาย', weight: 72, height: 170, admit: '21/03/2569', diag: 'โรคหัวใจ — หลังผ่าตัด', note: 'แพ้ยา Penicillin' },
+      '502': { room: '502', label: 'ห้อง 502 VIP', type: 'VIP', name: 'คุณสุภาพร รักเรียน', age: 55, dob: '20/08/2512', gender: 'หญิง', weight: 58, height: 160, admit: '22/03/2569', diag: 'ผ่าตัดข้อเข่า', note: '' },
+      '503': { room: '503', label: 'ห้อง 503', type: 'ทั่วไป', name: 'คุณวิชัย มั่นคง', age: 45, dob: '01/01/2524', gender: 'ชาย', weight: 80, height: 175, admit: '20/03/2569', diag: 'ปอดบวม', note: 'เบาหวาน Type 2' },
+      '504': { room: '504', label: 'ห้อง 504 Post-Op', type: 'หลังผ่าตัด', name: 'คุณนภา สวยงาม', age: 38, dob: '10/10/2531', gender: 'หญิง', weight: 52, height: 158, admit: '23/03/2569', diag: 'ผ่าตัดไส้ติ่ง', note: '' },
+      '505': { room: '505', label: 'ห้อง 505 Post-Op', type: 'หลังผ่าตัด', name: 'คุณอนันต์ ขยันทำ', age: 50, dob: '05/05/2519', gender: 'ชาย', weight: 68, height: 168, admit: '22/03/2569', diag: 'ผ่าตัดกระดูกสันหลัง', note: 'ความดันสูง' },
+    };
+    localStorage.setItem(STORE_ROOMS, JSON.stringify(defaultRooms));
+  }
+}
+seedRoomsIfEmpty();
+
+// ══════════════════════════════════════
+//  VALIDATION HELPERS
+// ══════════════════════════════════════
+function calculateAge(dobStr) {
+  const [day, month, yearThai] = dobStr.split('/').map(Number);
+  if (!day || !month || !yearThai) return null;
+  const yearGreg = yearThai > 2400 ? yearThai - 543 : yearThai;
+  const dob = new Date(yearGreg, month - 1, day);
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  if (today.getMonth() < month - 1 || (today.getMonth() === month - 1 && today.getDate() < day)) {
+    age--;
+  }
+  return age;
+}
+
+// ══════════════════════════════════════
+//  LOGIN
+// ══════════════════════════════════════
+let currentRoomId = null;
+let currentRoom = null;
+
+function populateRoomSelect() {
+  const rooms = getRooms();
+  const sel = document.getElementById('login-room');
+  sel.innerHTML = '<option value="">— เลือกห้องพัก —</option>';
+  Object.values(rooms).sort((a,b) => a.room.localeCompare(b.room)).forEach(r => {
+    const o = document.createElement('option');
+    o.value = r.room;
+    o.textContent = `${r.label} — ${r.name}`;
+    sel.appendChild(o);
+  });
+}
+populateRoomSelect();
+
+function doLogin() {
+  const roomId = document.getElementById('login-room').value;
+  const dob = document.getElementById('login-dob').value.trim();
+  const errEl = document.getElementById('login-err');
+  errEl.style.display = 'none';
+
+  if (!roomId) { errEl.textContent = '⚠️ กรุณาเลือกห้องพัก'; errEl.style.display = 'block'; return; }
+
+  const rooms = getRooms();
+  const room = rooms[roomId];
+  if (!room) { errEl.textContent = '⚠️ ไม่พบข้อมูลห้อง'; errEl.style.display = 'block'; return; }
+
+  if (dob && room.dob && dob !== room.dob) {
+    errEl.textContent = '⚠️ วันเกิดไม่ตรง กรุณาลองอีกครั้ง';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  currentRoomId = roomId;
+  currentRoom = room;
+  showApp();
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+
+  const r = currentRoom;
+  document.getElementById('h-room').textContent = window.i18n.translations[window.i18n.currentLang]['room_prefix'] + r.label;
+  const greetingKey = r.gender === 'หญิง' ? 'greeting_female' : 'greeting_male';
+  document.getElementById('h-name').textContent = window.i18n.translations[window.i18n.currentLang][greetingKey] + ' ' + r.name;
+  const info = [];
+  if (r.age) info.push(`<span>🎂 ${r.age} ปี</span>`);
+  if (r.weight) info.push(`<span>⚖️ ${r.weight} กก.</span>`);
+  if (r.height) info.push(`<span>📏 ${r.height} ซม.</span>`);
+  if (r.diag) info.push(`<span>🩻 ${r.diag}</span>`);
+  document.getElementById('h-info').innerHTML = info.join('');
+}
+
+function doLogout() {
+  currentRoomId = null; currentRoom = null;
+  resetForm();
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-dob').value = '';
+  populateRoomSelect();
+}
+
+// ══════════════════════════════════════
+//  CATEGORY / SUB-OPTIONS
+// ══════════════════════════════════════
+const CAT_CONFIG = {
+  pain: {
+    icon: '😣', name: 'ปวด / ไม่สบาย',
+    header: 'ระดับความปวด (1 = ไม่ปวด → 10 = ปวดมากที่สุด)',
+    type: 'pain'
+  },
+  food: {
+    icon: '🍱', name: 'น้ำ / อาหาร',
+    header: 'ต้องการอะไร?',
+    type: 'chips',
+    opts: ['น้ำเปล่า 🥤', 'น้ำอุ่น ♨️', 'น้ำผลไม้ 🍊', 'ข้าวต้ม 🍚', 'อาหารอ่อน 🥣', 'นม 🥛', 'อื่นๆ']
+  },
+  toilet: {
+    icon: '🚿', name: 'ห้องน้ำ / ผ้า',
+    header: 'ต้องการความช่วยเหลือเรื่องใด?',
+    type: 'chips',
+    opts: ['พาไปห้องน้ำ 🚶', 'ใช้กระโถน 🪣', 'เปลี่ยนผ้า 👕', 'เปลี่ยนผ้าปูที่นอน 🛏', 'เช็ดตัว 🧼', 'ทำแผล / เปลี่ยนผ้าพัน']
+  },
+  med: {
+    icon: '💊', name: 'ยา / หัตถการ',
+    header: 'เกี่ยวกับอะไร?',
+    type: 'chips',
+    opts: ['ยาแก้ปวด 💊', 'ยาคลื่นไส้ 🤢', 'ยานอนหลับ 😴', 'น้ำเกลือหมด 💧', 'สายหลุด / เลื่อน 🔌', 'ถามเรื่องยา ❓', 'ตรวจสัญญาณชีพ 🩺']
+  },
+  pos: {
+    icon: '🛏', name: 'ปรับท่านอน',
+    header: 'ต้องการให้ช่วยอะไร?',
+    type: 'chips',
+    opts: ['พลิกตัว 🔄', 'ยกหัวเตียงขึ้น', 'ลดหัวเตียง', 'ปรับหมอน', 'ช่วยลุกนั่ง']
+  },
+  device: {
+    icon: '🔌', name: 'อุปกรณ์ / IV',
+    header: 'ปัญหาที่พบ?',
+    type: 'chips',
+    opts: ['น้ำเกลือหมด / หยุด', 'สายเจ็บ / บวม', 'เครื่องดังเสียงเตือน', 'ออกซิเจนหลุด', 'สายปัสสาวะผิดปกติ']
+  }
+};
+
+let selCat = null;
+let selSub = null;
+let selPain = null;
+const selExtras = new Set();
+
+function toggleCat(cat) {
+  if (selCat === cat) {
+    selCat = null; selSub = null; selPain = null;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('sel'));
+    document.getElementById('sub-panel').classList.remove('open');
+    return;
+  }
+  selCat = cat; selSub = null; selPain = null;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('sel'));
+  document.getElementById('cat-' + cat).classList.add('sel');
+  renderSub(cat);
+  document.getElementById('sub-panel').classList.add('open');
+}
+
+function renderSub(cat) {
+  const cfg = CAT_CONFIG[cat];
+  const inner = document.getElementById('sub-inner');
+  inner.innerHTML = `<div class="sub-header">${cfg.header}</div>`;
+
+  if (cfg.type === 'pain') {
+    const row = document.createElement('div');
+    row.className = 'pain-row';
+    for (let i = 1; i <= 10; i++) {
+      const btn = document.createElement('div');
+      btn.className = `pain-btn p${i}`;
+      btn.textContent = i;
+      btn.onclick = () => {
+        document.querySelectorAll('.pain-btn').forEach(b => b.classList.remove('sel'));
+        btn.classList.add('sel');
+        selPain = i;
+      };
+      row.appendChild(btn);
+    }
+    inner.appendChild(row);
+  } else {
+    const wrap = document.createElement('div');
+    wrap.className = 'sub-chips';
+    cfg.opts.forEach(opt => {
+      const chip = document.createElement('div');
+      chip.className = 'sub-chip';
+      chip.textContent = opt;
+      chip.onclick = () => {
+        document.querySelectorAll('.sub-chip').forEach(c => c.classList.remove('sel'));
+        chip.classList.add('sel');
+        selSub = opt;
+      };
+      wrap.appendChild(chip);
+    });
+    inner.appendChild(wrap);
+  }
+}
+
+function toggleExtra(el, key) {
+  if (selExtras.has(key)) { selExtras.delete(key); el.classList.remove('sel'); }
+  else { selExtras.add(key); el.classList.add('sel'); }
+}
+
+// ══════════════════════════════════════
+//  SEND
+// ══════════════════════════════════════
+let reqCounter = Date.now();
+
+function sendSOS() {
+  if (!currentRoom) return;
+  pushRequest({
+    type: 'SOS',
+    priority: 'urgent',
+    catIcon: '🆘',
+    catName: 'SOS ฉุกเฉิน',
+    detail: 'ผู้ป่วยกดปุ่มฉุกเฉิน SOS!',
+    extras: [],
+    note: ''
+  });
+  showSuccess('🆘 ส่ง SOS แล้ว!', 'พยาบาลรับแจ้งแล้วและกำลังรีบมาดูแลท่าน');
+}
+
+function sendRequest() {
+  const note = document.getElementById('note-area').value.trim();
+  const extras = [...selExtras];
+  if (!selCat && extras.length === 0 && !note) {
+    alert('กรุณาเลือกหมวดหมู่ หรือพิมพ์รายละเอียดที่ต้องการ');
+    return;
+  }
+
+  const cfg = selCat ? CAT_CONFIG[selCat] : null;
+  let detail = '';
+  if (selPain) detail = `ระดับความปวด: ${selPain}/10`;
+  else if (selSub) detail = selSub;
+
+  pushRequest({
+    type: selCat || 'note',
+    priority: 'normal',
+    catIcon: cfg ? cfg.icon : '📝',
+    catName: cfg ? cfg.name : 'บันทึกข้อความ',
+    detail,
+    extras,
+    note,
+    painLevel: selPain
+  });
+
+  showSuccess('✅ แจ้งพยาบาลแล้ว!', 'กรุณารอสักครู่ พยาบาลจะมาดูแลท่าน');
+}
+
+function pushRequest(data) {
+  const reqs = getReqs();
+  reqs.unshift({
+    id: ++reqCounter,
+    roomId: currentRoomId,
+    roomLabel: currentRoom.label,
+    patient: currentRoom.name,
+    timestamp: Date.now(),
+    status: data.priority === 'urgent' ? 'urgent' : 'pending',
+    isNew: true,
+    ...data
+  });
+  saveReqs(reqs);
+}
+
+function showSuccess(title, sub) {
+  document.getElementById('success-overlay').classList.add('show');
+  document.querySelector('.s-title').textContent = title;
+  document.querySelector('.s-sub').textContent = sub;
+  resetForm();
+}
+
+function closeSuccess() {
+  document.getElementById('success-overlay').classList.remove('show');
+}
+
+function resetForm() {
+  selCat = null; selSub = null; selPain = null; selExtras.clear();
+  document.querySelectorAll('.cat-btn,.extra-btn,.sub-chip,.pain-btn').forEach(e => e.classList.remove('sel'));
+  document.getElementById('sub-panel').classList.remove('open');
+  document.getElementById('note-area').value = '';
+  deleteAudioRecording();
+}
+
+// ══════════════════════════════════════
+//  AUDIO RECORDING SYSTEM
+// ══════════════════════════════════════
+let recorder = null;
+let recordingStream = null;
+let audioChunks = [];
+let recordingStartTime = null;
+let recordingTimer = null;
+let recordedAudio = null;
+
+function startRecording() {
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
+      .then(stream => {
+        recordingStream = stream;
+        recorder = new MediaRecorder(stream);
+        audioChunks = [];
+        recordingStartTime = Date.now();
+        
+        recorder.ondataavailable = (event) => {
+          audioChunks.push(event.data);
+        };
+        
+        recorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            recordedAudio = reader.result;
+            displayAudioPlayback();
+          };
+          reader.readAsDataURL(audioBlob);
+          
+          recordingStream.getTracks().forEach(track => track.stop());
+          recorder = null;
+          recordingStream = null;
+        };
+        
+        recorder.start();
+        updateRecordingUI(true);
+        startRecordingTimer();
+      })
+      .catch(err => {
+        console.error('ไม่สามารถใช้ไมโครโฟน:', err);
+        alert('⚠️ ไม่สามารถใช้ไมโครโฟนได้ กรุณาตรวจสอบสิทธิ์การเข้าถึง');
+      });
+  } else {
+    alert('⚠️ เบราว์เซอร์ของคุณไม่รองรับการบันทึกเสียง');
+  }
+}
+
+function stopRecording() {
+  if (recorder && recordingStream) {
+    recorder.stop();
+    clearInterval(recordingTimer);
+    recordingTimer = null;
+    updateRecordingUI(false);
+  }
+}
+
+function updateRecordingUI(isRecording) {
+  const recordBtn = document.getElementById('record-btn');
+  const stopBtn = document.getElementById('stop-btn');
+  const indicatorContainer = document.getElementById('recording-indicator-container');
+  const waveContainer = document.getElementById('audio-wave-container');
+  
+  if (isRecording) {
+    recordBtn.style.display = 'none';
+    stopBtn.style.display = 'flex';
+    stopBtn.disabled = false;
+    indicatorContainer.style.display = 'block';
+    waveContainer.style.display = 'flex';
+    recordBtn.classList.add('recording');
+    
+    createAudioBars();
+  } else {
+    recordBtn.style.display = 'flex';
+    stopBtn.style.display = 'none';
+    recordBtn.classList.remove('recording');
+    indicatorContainer.style.display = 'none';
+    waveContainer.style.display = 'none';
+  }
+}
+
+function startRecordingTimer() {
+  const timeEl = document.getElementById('audio-time');
+  recordingTimer = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    timeEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }, 100);
+}
+
+function displayAudioPlayback() {
+  const playback = document.getElementById('audio-playback');
+  const audioPlayer = document.getElementById('audio-player');
+  audioPlayer.src = recordedAudio;
+  playback.classList.add('show');
+}
+
+function deleteAudioRecording() {
+  recordedAudio = null;
+  audioChunks = [];
+  document.getElementById('audio-playback').classList.remove('show');
+  document.getElementById('audio-player').src = '';
+  document.getElementById('audio-time').textContent = '0:00';
+}
+
+function createAudioBars() {
+  const container = document.getElementById('audio-bars');
+  container.innerHTML = '';
+  for (let i = 0; i < 15; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'audio-bar';
+    bar.style.animationDelay = `${i * 0.08}s`;
+    container.appendChild(bar);
+  }
+}
+
+// ══════════════════════════════════════
+//  UPDATE SEND REQUEST TO INCLUDE AUDIO
+// ══════════════════════════════════════
+const originalSendRequest = sendRequest;
+function sendRequest() {
+  const note = document.getElementById('note-area').value.trim();
+  const extras = [...selExtras];
+  if (!selCat && extras.length === 0 && !note && !recordedAudio) {
+    alert('กรุณาเลือกหมวดหมู่ หรือพิมพ์รายละเอียด หรืออัดเสียงที่ต้องการ');
+    return;
+  }
+
+  const cfg = selCat ? CAT_CONFIG[selCat] : null;
+  let detail = '';
+  if (selPain) detail = `ระดับความปวด: ${selPain}/10`;
+  else if (selSub) detail = selSub;
+
+  pushRequest({
+    type: selCat || 'note',
+    priority: 'normal',
+    catIcon: cfg ? cfg.icon : '📝',
+    catName: cfg ? cfg.name : 'บันทึกข้อความ',
+    detail,
+    extras,
+    note,
+    painLevel: selPain,
+    audio: recordedAudio,
+    hasAudio: !!recordedAudio
+  });
+
+  showSuccess('✅ แจ้งพยาบาลแล้ว!', 'กรุณารอสักครู่ พยาบาลจะมาดูแลท่าน');
+}
+</script>
+<!-- <p>กล้องคอมที่ห้อง001 กล้องเวบเเคมที่ห้อง002</p> -->
+</body>
+</html>

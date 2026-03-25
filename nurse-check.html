@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="nurse_check_title">CareCall — Check-In/Out พยาบาล</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=Noto+Serif+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="i18n.js"></script>
+<style>
+:root {
+  --bg: #0B1622;
+  --bg2: #111E2E;
+  --bg3: #16273B;
+  --panel: #1A2F45;
+  --border: rgba(80,160,200,0.15);
+  --border2: rgba(255,255,255,0.07);
+  --teal: #00BCD4;
+  --teal2: #00838F;
+  --green: #00E676;
+  --red: #FF1744;
+  --amber: #FFB300;
+  --text: rgba(255,255,255,0.92);
+  --text2: rgba(255,255,255,0.56);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.container { max-width: 800px; margin: 0 auto; padding: 20px; }
+
+/* ═══ HEADER ═══ */
+.header {
+  background: linear-gradient(135deg, var(--teal2), var(--teal));
+  padding: 28px 24px;
+  border-radius: 16px;
+  margin-bottom: 28px;
+  text-align: center;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Noto Serif Thai', serif;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: white;
+  justify-content: center;
+}
+.logo img {
+  height: 52px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+.tagline { font-size: 14px; color: rgba(255,255,255,0.7); }
+
+/* ═══ CARD ═══ */
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.card-title { font-family: 'Noto Serif Thai', serif; font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+
+/* ═══ FORM ═══ */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+.form-select {
+  width: 100%;
+  padding: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'Sarabun', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-select:focus { border-color: var(--teal); }
+
+/* ═══ BUTTONS ═══ */
+.btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 50px;
+  border: none;
+  font-family: 'Sarabun', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.btn-checkin {
+  background: linear-gradient(135deg, var(--green), #00C853);
+  color: white;
+  box-shadow: 0 6px 20px rgba(0,230,118,0.4);
+}
+.btn-checkin:hover { transform: translateY(-2px); }
+.btn-checkout {
+  background: linear-gradient(135deg, var(--amber), #FF9800);
+  color: white;
+  box-shadow: 0 6px 20px rgba(255,179,0,0.4);
+}
+.btn-checkout:hover { transform: translateY(-2px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ═══ INFO BOX ═══ */
+.info-box {
+  background: var(--bg3);
+  border-left: 3px solid var(--teal);
+  padding: 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.info-label { color: var(--text2); display: block; margin-bottom: 4px; }
+.info-value { color: var(--teal); font-weight: 700; font-size: 18px; }
+
+/* ═══ STATUS ═══ */
+.status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.status-card {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+.status-icon { font-size: 32px; margin-bottom: 8px; }
+.status-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+.status-time { font-size: 18px; font-weight: 700; color: var(--teal); }
+
+/* ═══ CHART ═══ */
+.chart-container {
+  height: 350px;
+  margin-top: 24px;
+  position: relative;
+}
+
+/* ═══ HISTORY ═══ */
+.history-list { max-height: 400px; overflow-y: auto; }
+.history-item {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.history-time { font-weight: 700; color: var(--text); }
+.history-type { font-size: 12px; color: var(--text2); }
+
+/* ═══ TOAST ═══ */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--panel);
+  border-left: 3px solid var(--green);
+  color: var(--text);
+  padding: 14px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+@keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo"><img src="SilentCare logo design.png" alt="SilentCare Logo"> ลงเข้า/ออก — พยาบาล</div>
+    <div class="tagline">บันทึกเวลาการมาและออกจากงาน</div>
+  </div>
+
+  <!-- SELECT NURSE -->
+  <div class="card">
+    <div class="form-group">
+      <label class="form-label">เลือกพยาบาล</label>
+      <select class="form-select" id="nurse-select">
+        <option value="">— เลือกชื่อพยาบาล —</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- CHECK-IN/OUT SECTION -->
+  <div class="card" id="actions-section" style="display: none;">
+    <!-- Current Status -->
+    <div class="info-box" id="status-info">
+      <span class="info-label">🔔 สถานะปัจจุบัน</span>
+      <span class="info-value" id="current-status">ยังไม่ลงเข้า</span>
+    </div>
+
+    <!-- Check-in/out Time -->
+    <div class="status-grid">
+      <div class="status-card">
+        <div class="status-icon">📍</div>
+        <div class="status-label">เข้าทำงาน</div>
+        <div class="status-time" id="check-in-time">—</div>
+      </div>
+      <div class="status-card">
+        <div class="status-icon">👋</div>
+        <div class="status-label">ออกจากงาน</div>
+        <div class="status-time" id="check-out-time">—</div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <button class="btn btn-checkin" onclick="checkInNurse()" id="checkin-btn">
+      <span>📍</span> ลงเข้างาน
+    </button>
+    <button class="btn btn-checkout" onclick="checkOutNurse()" id="checkout-btn" disabled>
+      <span>👋</span> ลงออกจากงาน
+    </button>
+
+    <!-- Expected Time -->
+    <div class="info-box">
+      <span class="info-label">⏰ เวลาที่คาดหวัง (เข้า)</span>
+      <span class="info-value" id="expected-time">08:00</span>
+    </div>
+
+    <!-- On-time Status -->
+    <div class="info-box" id="ontime-box" style="border-left-color: var(--green); display: none;">
+      <span class="info-label">✅ มาตรงเวลา</span>
+      <span class="info-value" style="color: var(--green);">เข้างานตรงตามเวลา</span>
+    </div>
+    <div class="info-box" id="late-box" style="border-left-color: var(--red); display: none;">
+      <span class="info-label">⏱️ มาสาย</span>
+      <span class="info-value" style="color: var(--red);" id="late-minutes">สาย — นาที</span>
+    </div>
+  </div>
+
+  <!-- TODAY'S RECORD -->
+  <div class="card" id="records-section" style="display: none;">
+    <div class="card-title">📝 บันทึกการลงเข้า-ออกวันนี้</div>
+    <div class="history-list" id="today-history"></div>
+  </div>
+
+  <!-- MONTH STATISTICS -->
+  <div class="card" id="stats-section" style="display: none;">
+    <div class="card-title">📊 สถิติการเข้างานเดือนนี้</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+      <div class="status-card">
+        <div class="status-icon">✅</div>
+        <div class="status-label">ตรงเวลา</div>
+        <div class="status-time" id="stat-ontime">0</div>
+      </div>
+      <div class="status-card">
+        <div class="status-icon">⏱️</div>
+        <div class="status-label">สาย</div>
+        <div class="status-time" id="stat-late" style="color: var(--red);">0</div>
+      </div>
+      <div class="status-card">
+        <div class="status-icon">📅</div>
+        <div class="status-label">มาทั้งหมด</div>
+        <div class="status-time" id="stat-total">0</div>
+      </div>
+    </div>
+    <div class="chart-container">
+      <canvas id="punctualityChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE_NURSES = 'silencare_nurses';
+const STORE_CHECKINS = 'silencare_checkins';
+
+let currentNurseId = null;
+let punctualityChart = null;
+
+function getNurses() {
+  try { return JSON.parse(localStorage.getItem(STORE_NURSES) || '{}'); } catch { return {}; }
+}
+
+function getCheckIns() {
+  try { return JSON.parse(localStorage.getItem(STORE_CHECKINS) || '[]'); } catch { return []; }
+}
+
+function saveCheckIns(checkins) {
+  localStorage.setItem(STORE_CHECKINS, JSON.stringify(checkins));
+}
+
+function showToast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function renderNurseSelect() {
+  const nurses = getNurses();
+  const sel = document.getElementById('nurse-select');
+  sel.innerHTML = '<option value="">— เลือกชื่อพยาบาล —</option>';
+  
+  Object.values(nurses).forEach(n => {
+    const o = document.createElement('option');
+    o.value = n.id;
+    o.textContent = `${n.name} (${n.shift === 'morning' ? '🌅 เช้า' : n.shift === 'afternoon' ? '☀️ บ่าย' : '🌙 ค่ำคืน'})`;
+    sel.appendChild(o);
+  });
+}
+
+function selectNurse() {
+  const nurseId = document.getElementById('nurse-select').value;
+  if (!nurseId) {
+    document.getElementById('actions-section').style.display = 'none';
+    document.getElementById('records-section').style.display = 'none';
+    document.getElementById('stats-section').style.display = 'none';
+    return;
+  }
+  
+  currentNurseId = nurseId;
+  document.getElementById('actions-section').style.display = 'block';
+  document.getElementById('records-section').style.display = 'block';
+  document.getElementById('stats-section').style.display = 'block';
+  
+  updateNurseStatus();
+  updateTodayHistory();
+  updateStatistics();
+  renderPunctualityChart();
+}
+
+function getExpectedCheckInTime(shiftType) {
+  const times = {
+    'morning': '06:00',
+    'afternoon': '14:00',
+    'night': '22:00'
+  };
+  return times[shiftType] || '06:00';
+}
+
+function updateNurseStatus() {
+  const nurses = getNurses();
+  const nurse = nurses[currentNurseId];
+  const checkins = getCheckIns();
+  const today = new Date().toDateString();
+  
+  const todayRecord = checkins.find(c => c.nurseId === currentNurseId && new Date(c.timestamp).toDateString() === today);
+  
+  const expectedTime = getExpectedCheckInTime(nurse.shift);
+  document.getElementById('expected-time').textContent = expectedTime;
+  
+  if (!todayRecord) {
+    document.getElementById('current-status').textContent = '🔴 ยังไม่ลงเข้า';
+    document.getElementById('check-in-time').textContent = '—';
+    document.getElementById('check-out-time').textContent = '—';
+    document.getElementById('checkin-btn').disabled = false;
+    document.getElementById('checkout-btn').disabled = true;
+    document.getElementById('ontime-box').style.display = 'none';
+    document.getElementById('late-box').style.display = 'none';
+  } else {
+    const checkInTime = new Date(todayRecord.timestamp);
+    const checkInStr = `${String(checkInTime.getHours()).padStart(2, '0')}:${String(checkInTime.getMinutes()).padStart(2, '0')}`;
+    
+    document.getElementById('check-in-time').textContent = checkInStr;
+    document.getElementById('checkin-btn').disabled = true;
+    document.getElementById('checkout-btn').disabled = false;
+    
+    // Calculate if on time or late
+    const [expHour, expMin] = expectedTime.split(':').map(Number);
+    const expectedDate = new Date();
+    expectedDate.setHours(expHour, expMin, 0);
+    
+    if (checkInTime <= expectedDate) {
+      document.getElementById('current-status').textContent = '🟢 ตรงเวลา';
+      document.getElementById('ontime-box').style.display = 'block';
+      document.getElementById('late-box').style.display = 'none';
+    } else {
+      const lateMinutes = Math.floor((checkInTime - expectedDate) / 60000);
+      document.getElementById('current-status').textContent = `🟠 สาย ${lateMinutes} นาที`;
+      document.getElementById('late-minutes').textContent = `สาย ${lateMinutes} นาที`;
+      document.getElementById('late-box').style.display = 'block';
+      document.getElementById('ontime-box').style.display = 'none';
+    }
+    
+    if (todayRecord.checkOutTime) {
+      const checkOutTime = new Date(todayRecord.checkOutTime);
+      const checkOutStr = `${String(checkOutTime.getHours()).padStart(2, '0')}:${String(checkOutTime.getMinutes()).padStart(2, '0')}`;
+      document.getElementById('check-out-time').textContent = checkOutStr;
+      document.getElementById('current-status').textContent = '⚫ ออกจากงานแล้ว';
+      document.getElementById('checkout-btn').disabled = true;
+    }
+  }
+}
+
+function checkInNurse() {
+  if (!currentNurseId) { showToast('⚠️ กรุณาเลือกพยาบาล'); return; }
+  
+  const checkins = getCheckIns();
+  const today = new Date().toDateString();
+  const todayRecord = checkins.find(c => c.nurseId === currentNurseId && new Date(c.timestamp).toDateString() === today);
+  
+  if (todayRecord) { showToast('⚠️ ลงเข้างานแล้ววันนี้'); return; }
+  
+  checkins.unshift({
+    nurseId: currentNurseId,
+    timestamp: new Date().toISOString(),
+    checkOutTime: null
+  });
+  
+  saveCheckIns(checkins);
+  updateNurseStatus();
+  updateTodayHistory();
+  updateStatistics();
+  renderPunctualityChart();
+  showToast('✅ ลงเข้างานแล้ว');
+}
+
+function checkOutNurse() {
+  if (!currentNurseId) { showToast('⚠️ กรุณาเลือกพยาบาล'); return; }
+  
+  const checkins = getCheckIns();
+  const today = new Date().toDateString();
+  const todayRecord = checkins.find(c => c.nurseId === currentNurseId && new Date(c.timestamp).toDateString() === today);
+  
+  if (!todayRecord) { showToast('⚠️ ยังไม่ลงเข้างาน'); return; }
+  if (todayRecord.checkOutTime) { showToast('⚠️ ลงออกแล้วแล้ว'); return; }
+  
+  todayRecord.checkOutTime = new Date().toISOString();
+  saveCheckIns(checkins);
+  updateNurseStatus();
+  updateTodayHistory();
+  renderPunctualityChart();
+  showToast('✅ ลงออกจากงานแล้ว');
+}
+
+function updateTodayHistory() {
+  const checkins = getCheckIns();
+  const today = new Date().toDateString();
+  const todayRecords = checkins.filter(c => c.nurseId === currentNurseId && new Date(c.timestamp).toDateString() === today);
+  
+  const list = document.getElementById('today-history');
+  if (todayRecords.length === 0) {
+    list.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text2);">ยังไม่มีบันทึกการลงเข้า-ออกวันนี้</div>';
+    return;
+  }
+  
+  list.innerHTML = todayRecords.map(r => {
+    const inTime = new Date(r.timestamp);
+    const inStr = `${String(inTime.getHours()).padStart(2, '0')}:${String(inTime.getMinutes()).padStart(2, '0')}`;
+    const outStr = r.checkOutTime 
+      ? (() => { const t = new Date(r.checkOutTime); return `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`; })()
+      : '—';
+    
+    return `
+      <div class="history-item">
+        <div>
+          <div class="history-time">📍 ${inStr}</div>
+          <div class="history-type">เข้างาน</div>
+        </div>
+        <div>
+          <div class="history-time">👋 ${outStr}</div>
+          <div class="history-type">ออกจากงาน</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateStatistics() {
+  const nurses = getNurses();
+  const nurse = nurses[currentNurseId];
+  const checkins = getCheckIns();
+  const thisMonth = checkins.filter(c => {
+    const date = new Date(c.timestamp);
+    return c.nurseId === currentNurseId && 
+           date.getMonth() === new Date().getMonth() && 
+           date.getFullYear() === new Date().getFullYear();
+  });
+  
+  const expectedTime = getExpectedCheckInTime(nurse.shift);
+  const [expHour, expMin] = expectedTime.split(':').map(Number);
+  
+  let ontime = 0, late = 0;
+  thisMonth.forEach(r => {
+    const checkInTime = new Date(r.timestamp);
+    const expectedDate = new Date(checkInTime);
+    expectedDate.setHours(expHour, expMin, 0);
+    
+    if (checkInTime <= expectedDate) {
+      ontime++;
+    } else {
+      late++;
+    }
+  });
+  
+  document.getElementById('stat-ontime').textContent = ontime;
+  document.getElementById('stat-late').textContent = late;
+  document.getElementById('stat-total').textContent = ontime + late;
+}
+
+function renderPunctualityChart() {
+  const nurses = getNurses();
+  const nurse = nurses[currentNurseId];
+  const checkins = getCheckIns();
+  const thisMonth = checkins.filter(c => {
+    const date = new Date(c.timestamp);
+    return c.nurseId === currentNurseId && 
+           date.getMonth() === new Date().getMonth() && 
+           date.getFullYear() === new Date().getFullYear();
+  });
+  
+  const expectedTime = getExpectedCheckInTime(nurse.shift);
+  const [expHour, expMin] = expectedTime.split(':').map(Number);
+  
+  let ontime = 0, late = 0;
+  thisMonth.forEach(r => {
+    const checkInTime = new Date(r.timestamp);
+    const expectedDate = new Date(checkInTime);
+    expectedDate.setHours(expHour, expMin, 0);
+    
+    if (checkInTime <= expectedDate) {
+      ontime++;
+    } else {
+      late++;
+    }
+  });
+  
+  const ctx = document.getElementById('punctualityChart');
+  if (punctualityChart) punctualityChart.destroy();
+  
+  punctualityChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['✅ ตรงเวลา', '⏱️ สาย'],
+      datasets: [{
+        label: 'การเข้างาน',
+        data: [ontime, late],
+        backgroundColor: ['rgba(0, 230, 118, 0.7)', 'rgba(255, 23, 68, 0.7)'],
+        borderColor: ['var(--green)', 'var(--red)'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: 'var(--text)' } } },
+      scales: {
+        y: { beginAtZero: true, ticks: { color: 'var(--text2)' }, grid: { color: 'rgba(0,188,212,0.1)' } },
+        x: { ticks: { color: 'var(--text2)' }, grid: { color: 'rgba(0,188,212,0.1)' } }
+      }
+    }
+  });
+}
+
+// Event listener for nurse select
+document.getElementById('nurse-select').addEventListener('change', selectNurse);
+
+renderNurseSelect();
+</script>
+</body>
+</html>
