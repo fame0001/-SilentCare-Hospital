@@ -930,11 +930,12 @@ body {
       <span class="filter-label">ห้อง:</span>
       <button class="ftab active" id="cr-all" onclick="setChartRoom('all', this)">ภาพรวม</button>
       <button class="ftab" id="cr-001" onclick="setChartRoom('001', this)">001</button>
-      <button class="ftab" id="cr-501" onclick="setChartRoom('501', this)">501</button>
-      <button class="ftab" id="cr-502" onclick="setChartRoom('502', this)">502</button>
-      <button class="ftab" id="cr-503" onclick="setChartRoom('503', this)">503</button>
-      <button class="ftab" id="cr-504" onclick="setChartRoom('504', this)">504</button>
-      <button class="ftab" id="cr-505" onclick="setChartRoom('505', this)">505</button>
+      <button class="ftab" id="cr-501" onclick="setChartRoom('002, this)">002</button>
+      <button class="ftab" id="cr-502" onclick="setChartRoom('003', this)">003</button>
+      <button class="ftab" id="cr-503" onclick="setChartRoom('004, this)">004</button>
+      <button class="ftab" id="cr-504" onclick="setChartRoom('005, this)">005</button>
+      <button class="ftab" id="cr-504" onclick="setChartRoom('006', this)">006</button>
+      <button class="ftab" id="cr-505" onclick="setChartRoom('111', this)">111</button>
     </div>
     <div class="filter-row" style="margin-bottom:0">
       <span class="filter-label">ช่วง:</span>
@@ -1151,12 +1152,12 @@ function seedRoomsIfEmpty() {
   const rooms = getRooms();
   if (Object.keys(rooms).length === 0) {
     saveRooms({
-      '001': { room: '001', label: 'ห้อง 001 หลังผ่าตัด', type: 'หลังผ่าตัด', name: 'pottamin', age: 35, dob: '01/01/2534', gender: 'หญิง', weight: 45, height: 125, admit: '24/03/2569', diag: 'ผ่าตัดขั้วหัวใจ', note: '' },
-      '501': { room: '501', label: 'ห้อง 501 VIP', type: 'VIP', name: 'คุณสมชาย ใจดี', age: 62, dob: '15/03/2506', gender: 'ชาย', weight: 72, height: 170, admit: '21/03/2569', diag: 'โรคหัวใจ — หลังผ่าตัด', note: 'แพ้ยา Penicillin' },
-      '502': { room: '502', label: 'ห้อง 502 VIP', type: 'VIP', name: 'คุณสุภาพร รักเรียน', age: 55, dob: '20/08/2512', gender: 'หญิง', weight: 58, height: 160, admit: '22/03/2569', diag: 'ผ่าตัดข้อเข่า', note: '' },
-      '503': { room: '503', label: 'ห้อง 503', type: 'ทั่วไป', name: 'คุณวิชัย มั่นคง', age: 45, dob: '01/01/2524', gender: 'ชาย', weight: 80, height: 175, admit: '20/03/2569', diag: 'ปอดบวม', note: 'เบาหวาน Type 2' },
-      '504': { room: '504', label: 'ห้อง 504 Post-Op', type: 'หลังผ่าตัด', name: 'คุณนภา สวยงาม', age: 38, dob: '10/10/2531', gender: 'หญิง', weight: 52, height: 158, admit: '23/03/2569', diag: 'ผ่าตัดไส้ติ่ง', note: '' },
-      '505': { room: '505', label: 'ห้อง 505 Post-Op', type: 'หลังผ่าตัด', name: 'คุณอนันต์ ขยันทำ', age: 50, dob: '05/05/2519', gender: 'ชาย', weight: 68, height: 168, admit: '22/03/2569', diag: 'ผ่าตัดกระดูกสันหลัง', note: 'ความดันสูง' },
+      '001': { room: '001', label: 'ห้อง 001 VIP', type: 'VIP', name: 'น.ส.พิมพ์ปภัสสร บัวสนธ', age: 62, dob: '15/03/2506', gender: 'ชาย', weight: 72, height: 170, admit: '21/03/2569', diag: 'โรคหัวใจ — หลังผ่าตัด', note: 'แพ้ยา Penicillin' },
+      '002': { room: '002', label: 'ห้อง 002 VIP', type: 'VIP', name: 'น.ส.สุณิศา มั่นคง', age: 55, dob: '20/08/2512', gender: 'หญิง', weight: 58, height: 160, admit: '22/03/2569', diag: 'ผ่าตัดข้อเข่า', note: '' },
+      '003': { room: '003', label: 'ห้อง 003', type: 'ทั่วไป', name: 'น.ส.สุณิศา มั่นคง', age: 45, dob: '01/01/2524', gender: 'ชาย', weight: 80, height: 175, admit: '20/03/2569', diag: 'ปอดบวม', note: 'เบาหวาน Type 2' },
+      '004': { room: '004', label: 'ห้อง 004 Post-Op', type: 'หลังผ่าตัด', name: 'น.ส.อะบีเทล อัคริมา วิลลากราเชีย', age: 38, dob: '10/10/2531', gender: 'หญิง', weight: 52, height: 158, admit: '23/03/2569', diag: 'ผ่าตัดไส้ติ่ง', note: '' },
+      '005': { room: '005', label: 'ห้อง 005 Post-Op', type: 'หลังผ่าตัด', name: 'คุณอนันต์ ขยันทำ', age: 50, dob: '05/05/2519', gender: 'ชาย', weight: 68, height: 168, admit: '22/03/2569', diag: 'ผ่าตัดกระดูกสันหลัง', note: 'ความดันสูง' },
+      '111': { room: '111', label: 'ห้อง 111 Post-Op', type: 'หลังผ่าตัด', name: 'น.ส.อะบีเทล อัคริมา วิลลากราเชียำ', age: 50, dob: '05/05/2519', gender: 'ชาย', weight: 68, height: 168, admit: '22/03/2569', diag: 'ผ่าตัดกระดูกสันหลัง', note: 'ความดันสูง' },
     });
   }
 }
