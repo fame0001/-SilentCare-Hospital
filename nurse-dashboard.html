@@ -44,6 +44,7 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0,188,212,0.25); border-radius: 2px; }
 
+/* ── TOPBAR ── */
 .topbar {
   position: sticky; top: 0; z-index: 200;
   background: linear-gradient(90deg, #0B1622 0%, #0D1E30 100%);
@@ -80,6 +81,7 @@ body {
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
 .topbar-time { font-size: 13px; color: var(--text2); font-family: monospace; }
 
+/* ── TABS ── */
 .tabs {
   display: flex;
   border-bottom: 1px solid var(--border);
@@ -101,9 +103,11 @@ body {
 }
 .tab.active { color: var(--teal); border-bottom-color: var(--teal); }
 
+/* ── PANES ── */
 .pane { display: none; padding: 16px; }
 .pane.active { display: block; }
 
+/* ── STATS ROW ── */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -129,6 +133,7 @@ body {
 .stat-n.g { color: var(--green); }
 .stat-l { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
 
+/* ── SOS BANNER ── */
 .sos-banner {
   display: none;
   background: linear-gradient(90deg, #7B0000, #C62828);
@@ -142,6 +147,7 @@ body {
 @keyframes flashRed { from{opacity:1} to{opacity:0.72} }
 .sos-banner-text { font-family: 'Noto Serif Thai', serif; font-size: 15px; font-weight: 700; color: white; flex: 1; }
 
+/* ── FILTER ── */
 .filter-row {
   display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;
 }
@@ -159,6 +165,7 @@ body {
 }
 .ftab.active { background: var(--teal); border-color: var(--teal); color: #000; }
 
+/* ── REQUEST CARDS ── */
 .req-list { display: flex; flex-direction: column; gap: 10px; }
 .req-card {
   background: var(--panel);
@@ -220,6 +227,7 @@ body {
 .empty-state { text-align: center; padding: 48px 20px; color: var(--text3); }
 .empty-icon { font-size: 48px; margin-bottom: 12px; }
 
+/* ── ROOMS OVERVIEW ── */
 .rooms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
 .room-overview-card {
   background: var(--panel);
@@ -252,6 +260,7 @@ body {
 .roc-req-count.none { background: rgba(255,255,255,0.05); color: var(--text3); }
 .roc-req-count.has { background: rgba(255,23,68,0.12); color: var(--red2); }
 
+/* ── SHEETS ── */
 .sheet-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,0.75); z-index: 800;
@@ -275,6 +284,7 @@ body {
   display: flex; align-items: center; justify-content: center;
 }
 
+/* ── MANAGE PANE ── */
 #pane-manage { padding: 16px; }
 
 .manage-top-bar {
@@ -424,6 +434,9 @@ body {
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
+/* ══════════════════════════════════════
+   CCTV PANE
+══════════════════════════════════════ */
 #pane-cctv { padding: 0; }
 
 .cctv-header {
@@ -605,6 +618,9 @@ body {
 .cam-empty-icon { font-size: 52px; margin-bottom: 14px; }
 .cam-video { width: 100%; height: 100%; object-fit: cover; }
 
+/* ══════════════════════════════════════
+   CHARTS PANE — HOSPITAL GRADE
+══════════════════════════════════════ */
 #pane-charts { padding: 0 0 24px; }
 
 .charts-header {
@@ -614,6 +630,7 @@ body {
   padding: 12px 16px;
 }
 
+/* Vital signs live ticker row */
 .vital-ticker {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -659,6 +676,7 @@ body {
 .vital-tick-card.abnormal .vital-tick-alert { display: block; }
 .vital-tick-card.abnormal { border-color: rgba(255,77,106,0.35); }
 
+/* Chart panels */
 .chart-panels { padding: 12px 16px; display: flex; flex-direction: column; gap: 16px; }
 .chart-panel {
   background: var(--panel);
@@ -700,6 +718,7 @@ body {
 .chart-stat-pill.low { background: rgba(0,188,212,0.1); color: #60D8EC; border: 1px solid rgba(0,188,212,0.2); }
 .chart-panel-body { padding: 8px 14px 16px; position: relative; }
 
+/* Legend for multi-room charts */
 .chart-legend {
   display: flex; flex-wrap: wrap; gap: 8px;
   padding: 6px 18px 0;
@@ -715,6 +734,7 @@ body {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
 }
 
+/* Normal range band label */
 .range-annotation {
   font-size: 10px; color: var(--text3);
   position: absolute; right: 20px; bottom: 20px;
@@ -727,6 +747,7 @@ body {
   border: 1px solid rgba(0,230,118,0.2);
 }
 
+/* ── CONFIRM MODAL ── */
 .confirm-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,0.7);
@@ -855,6 +876,7 @@ body {
   <div class="tab" onclick="switchTab('manage', this)">⚙️ จัดการ</div>
 </div>
 
+<!-- ══ REQUESTS PANE ══ -->
 <div id="pane-requests" class="pane active">
   <div class="stats-row">
     <div class="stat-box"><div class="stat-n r" id="st-urg">0</div><div class="stat-l">🔴 ฉุกเฉิน</div></div>
@@ -878,10 +900,12 @@ body {
   <div class="req-list" id="req-list"></div>
 </div>
 
+<!-- ══ ROOMS PANE ══ -->
 <div id="pane-rooms" class="pane">
   <div class="rooms-grid" id="rooms-grid"></div>
 </div>
 
+<!-- ══ CCTV PANE ══ -->
 <div id="pane-cctv" class="pane" style="padding:0">
   <div class="cctv-header">
     <div class="cctv-header-left">
@@ -898,8 +922,9 @@ body {
   <div class="cam-grid layout-1" id="cam-grid"></div>
 </div>
 
+<!-- ══ CHARTS PANE ══ -->
 <div id="pane-charts" class="pane" style="padding:0">
-  
+  <!-- sticky filters -->
   <div class="charts-header">
     <div class="filter-row" style="margin-bottom:8px" id="chart-room-filters">
       <span class="filter-label">ห้อง:</span>
@@ -920,10 +945,13 @@ body {
     </div>
   </div>
 
+  <!-- Live vitals ticker -->
   <div class="vital-ticker" id="vital-ticker"></div>
 
+  <!-- Chart panels -->
   <div class="chart-panels" id="chart-panels">
 
+    <!-- Heart Rate -->
     <div class="chart-panel">
       <div class="chart-panel-header">
         <div class="chart-panel-title">
@@ -944,6 +972,7 @@ body {
       </div>
     </div>
 
+    <!-- Blood Pressure -->
     <div class="chart-panel">
       <div class="chart-panel-header">
         <div class="chart-panel-title">
@@ -964,6 +993,7 @@ body {
       </div>
     </div>
 
+    <!-- Temperature -->
     <div class="chart-panel">
       <div class="chart-panel-header">
         <div class="chart-panel-title">
@@ -984,6 +1014,7 @@ body {
       </div>
     </div>
 
+    <!-- SpO2 -->
     <div class="chart-panel">
       <div class="chart-panel-header">
         <div class="chart-panel-title">
@@ -1007,6 +1038,7 @@ body {
   </div>
 </div>
 
+<!-- ══ ANALYTICS PANE ══ -->
 <div id="pane-analytics" class="pane">
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px;">
     <div class="stat-box">
@@ -1040,6 +1072,7 @@ body {
   </div>
 </div>
 
+<!-- ══ MANAGE PANE ══ -->
 <div id="pane-manage" class="pane">
   <div class="manage-top-bar">
     <div class="manage-title">⚙️ จัดการผู้ป่วย</div>
@@ -1066,6 +1099,8 @@ body {
     </div>
   </div>
 </div>
+
+<!-- DETAIL SHEET -->
 <div class="sheet-overlay" id="detail-sheet" onclick="closeSheetOutside(event)">
   <div class="sheet" id="detail-sheet-inner">
     <div class="sheet-handle"></div>
@@ -1073,6 +1108,7 @@ body {
   </div>
 </div>
 
+<!-- FORM SHEET -->
 <div class="sheet-overlay" id="form-sheet" onclick="closeFormOutside(event)">
   <div class="sheet" style="position:relative">
     <div class="sheet-handle"></div>
@@ -1081,7 +1117,9 @@ body {
   </div>
 </div>
 
+<!-- Toast -->
 <div class="toast" id="toast"></div>
+<!-- ── CONFIRM MODAL ── -->
 <div class="confirm-overlay" id="confirm-overlay" onclick="handleConfirmOverlayClick(event)">
   <div class="confirm-modal" id="confirm-modal">
     <div class="confirm-icon-wrap" id="confirm-icon">👋</div>
@@ -1099,6 +1137,9 @@ body {
 </div>
 
 <script>
+// ══════════════════════════════════════
+//  SHARED STORAGE
+// ══════════════════════════════════════
 const STORE_ROOMS = 'carecall_rooms';
 const STORE_REQS  = 'carecall_requests';
 function getRooms() { try { return JSON.parse(localStorage.getItem(STORE_ROOMS) || '{}'); } catch { return {}; } }
@@ -1121,7 +1162,9 @@ function seedRoomsIfEmpty() {
 }
 seedRoomsIfEmpty();
 
-
+// ══════════════════════════════════════
+//  CLOCK & POLLING
+// ══════════════════════════════════════
 function updateClock() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('th-TH'); }
 setInterval(updateClock, 1000);
 updateClock();
@@ -1134,6 +1177,9 @@ function refresh() {
   updateStats();
 }
 
+// ══════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════
 let activeTab = 'requests';
 function switchTab(tab, el) {
   activeTab = tab;
@@ -1147,6 +1193,9 @@ function switchTab(tab, el) {
   else refresh();
 }
 
+// ══════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════
 function updateStats() {
   const reqs = getReqs();
   document.getElementById('st-urg').textContent = reqs.filter(r => r.status === 'urgent').length;
@@ -1162,6 +1211,9 @@ function updateStats() {
 }
 function dismissSOS() { document.getElementById('sos-banner').classList.remove('show'); }
 
+// ══════════════════════════════════════
+//  REQUESTS
+// ══════════════════════════════════════
 let currentFilter = 'all';
 function setFilter(f, btn) {
   currentFilter = f;
@@ -1227,6 +1279,9 @@ function doneReq(id, e) {
   if (r) { r.status = 'done'; r.isNew = false; saveReqs(reqs); renderRequests(); updateStats(); showToast('✅ ดำเนินการเสร็จแล้ว'); }
 }
 
+// ══════════════════════════════════════
+//  REQUEST DETAIL
+// ══════════════════════════════════════
 function openReqDetail(id) {
   const reqs = getReqs();
   const r = reqs.find(x => x.id === id);
@@ -1258,6 +1313,9 @@ function openReqDetail(id) {
 function closeDetailSheet() { document.getElementById('detail-sheet').classList.remove('open'); }
 function closeSheetOutside(e) { if (e.target === document.getElementById('detail-sheet')) closeDetailSheet(); }
 
+// ══════════════════════════════════════
+//  ROOMS OVERVIEW
+// ══════════════════════════════════════
 function renderRooms() {
   const rooms = getRooms();
   const reqs = getReqs();
@@ -1331,6 +1389,9 @@ function openRoomDetail(roomId) {
   document.getElementById('detail-sheet').classList.add('open');
 }
 
+// ══════════════════════════════════════
+//  MANAGE — RENDER
+// ══════════════════════════════════════
 function renderManage() {
   const rooms = getRooms();
   const patientArr = Object.values(rooms).sort((a,b) => a.room.localeCompare(b.room));
@@ -1395,6 +1456,9 @@ function quickDischargePatient() {
   input.value = '';
 }
 
+// ══════════════════════════════════════
+//  MANAGE — FORMS
+// ══════════════════════════════════════
 function openAddPatient() { showPatientForm(null); }
 function openEditPatient(roomId) { closeDetailSheet(); showPatientForm(roomId); }
 
@@ -1567,7 +1631,9 @@ function deletePatient(roomId) {
 function closeFormSheet() { document.getElementById('form-sheet').classList.remove('open'); }
 function closeFormOutside(e) { if (e.target === document.getElementById('form-sheet')) closeFormSheet(); }
 
-
+// ══════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════
 let toastTimer;
 function showToast(msg) {
   const t = document.getElementById('toast');
@@ -1576,6 +1642,10 @@ function showToast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
 }
+
+// ══════════════════════════════════════
+//  CCTV SYSTEM
+// ══════════════════════════════════════
 let cctvLayout = 1;
 let cctvSelectedRooms = [];
 let cctvFullscreenRoom = null;
@@ -1726,10 +1796,13 @@ function exitFullscreen() {
   document.body.style.overflow = '';
 }
 
-
+// ══════════════════════════════════════
+//  VITAL SIGNS ENGINE
+// ══════════════════════════════════════
 let vitalSignsData = {};
 let vitalSignsHistory = {};
 
+// Color per room (distinct, readable on dark bg)
 const ROOM_COLORS = {
   '001': '#FF7043',
   '002': '#4FC3F7',
@@ -1742,7 +1815,7 @@ function getRoomColor(roomId) {
   return ROOM_COLORS[roomId] || '#90A4AE';
 }
 
-
+// Normal ranges
 const NORMAL_RANGES = {
   heartRate:   { min: 60, max: 100, label: '60–100 bpm' },
   systolic:    { min: 90, max: 120, label: '<120 mmHg' },
@@ -1807,11 +1880,15 @@ function updateVitalSigns() {
   });
 }
 
+// ══════════════════════════════════════
+//  CHARTS — HOSPITAL GRADE
+// ══════════════════════════════════════
 let charts = {};
 let analyticsCharts = {};
 let currentChartRoom = 'all';
 let currentTimeRange = 'realtime';
 
+// Shared chart defaults
 function baseChartOptions(yMin, yMax, normalMin, normalMax, unit) {
   return {
     responsive: true,
@@ -1859,7 +1936,7 @@ function baseChartOptions(yMin, yMax, normalMin, normalMax, unit) {
   };
 }
 
-
+// Normal range band plugin
 function normalBandPlugin(normalMin, normalMax, color) {
   return {
     id: 'normalBand',
@@ -1925,7 +2002,7 @@ function getMaxPoints() {
   if (currentTimeRange === '1h') return 12;
   if (currentTimeRange === '6h') return 40;
   if (currentTimeRange === '24h') return 80;
-  return 20; 
+  return 20; // realtime
 }
 
 function getHistorySlice(history, metric) {
@@ -1942,7 +2019,7 @@ function buildChartData(metric, isAll) {
 
   let labels = null;
   const datasets = [];
-  const allVals = []; 
+  const allVals = []; // for average
 
   roomIds.forEach(roomId => {
     const history = vitalSignsHistory[roomId];
@@ -1959,6 +2036,7 @@ function buildChartData(metric, isAll) {
     datasets.push(makeDataset(roomId, vals, color, `ห้อง ${roomId}`));
   });
 
+  // Average line (only in all-rooms mode)
   if (isAll && allVals.length > 0) {
     const avgVals = allVals.map(arr => arr.reduce((s,v) => s+v, 0) / arr.length);
     datasets.unshift(makeAvgDataset(avgVals, labels));
@@ -2045,7 +2123,7 @@ function updateCharts() {
   const isAll = currentChartRoom === 'all';
   const rooms = getRooms();
 
- 
+  // Heart Rate
   const hrData = buildChartData('heartRate', isAll);
   charts.heartRate.data = hrData;
   charts.heartRate.update('none');
@@ -2053,7 +2131,7 @@ function updateCharts() {
   const hrVals = hrData.datasets.filter(d=>d.label!=='ค่าเฉลี่ย').flatMap(d=>d.data);
   updateStatsPills('hr-stats', hrVals, 'bpm', 0);
 
-  
+  // Blood Pressure — systolic
   const sysDiaBoth = [];
   const bpDs = [];
   const roomIds = isAll ? Object.keys(rooms).sort() : [currentChartRoom];
@@ -2067,7 +2145,7 @@ function updateCharts() {
     if (!bpLabels) bpLabels = times.map(t => t.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     const color = getRoomColor(roomId);
     bpDs.push(makeDataset(roomId, sysVals, color, `${roomId} SYS`));
-    
+    // Diastolic as slightly transparent version
     const diaColor = color + 'AA';
     bpDs.push({...makeDataset(roomId, diaVals, diaColor, `${roomId} DIA`), borderWidth: 1.2 });
     sysVals.forEach((v,i) => { if(!bpAllSys[i]) bpAllSys[i]=[]; bpAllSys[i].push(v); });
@@ -2082,7 +2160,7 @@ function updateCharts() {
   const bpVals = bpDs.filter(d=>!d.label.includes('DIA')&&d.label!=='ค่าเฉลี่ย').flatMap(d=>d.data);
   updateStatsPills('bp-stats', bpVals, 'mmHg', 0);
 
-  
+  // Temperature
   const tempData = buildChartData('temperature', isAll);
   charts.temperature.data = tempData;
   charts.temperature.update('none');
@@ -2090,7 +2168,7 @@ function updateCharts() {
   const tempVals = tempData.datasets.filter(d=>d.label!=='ค่าเฉลี่ย').flatMap(d=>d.data);
   updateStatsPills('temp-stats', tempVals, '°C', 1);
 
-  
+  // SpO2
   const spo2Data = buildChartData('spo2', isAll);
   charts.spo2.data = spo2Data;
   charts.spo2.update('none');
@@ -2099,6 +2177,7 @@ function updateCharts() {
   updateStatsPills('spo2-stats', spo2Vals, '%', 1);
 }
 
+// ── VITAL TICKER ──
 function renderVitalTicker() {
   const rooms = getRooms();
   const ticker = document.getElementById('vital-ticker');
@@ -2186,7 +2265,9 @@ function initChartsTab() {
   updateCharts();
 }
 
-
+// ══════════════════════════════════════
+//  ANALYTICS
+// ══════════════════════════════════════
 function initAnalyticsCharts() {
   const rooms = getRooms();
   const roomsArr = Object.values(rooms);
@@ -2236,7 +2317,7 @@ function parseDate(dateStr) {
   return new Date(yearGreg, month - 1, day);
 }
 
-
+// ── CONFIRM MODAL ENGINE ──
 let _confirmCallback = null;
 
 function openConfirmModal({ type, icon, title, desc, name, warning, btnLabel, onConfirm }) {
@@ -2272,6 +2353,7 @@ function handleConfirmOverlayClick(e) {
   if (e.target === document.getElementById('confirm-overlay')) closeConfirmModal();
 }
 
+// แทนที่ฟังก์ชันเดิมทั้ง 3 ตัวนี้:
 function dischargePatient(roomId) {
   const rooms = getRooms();
   const room = rooms[roomId];
@@ -2333,6 +2415,9 @@ function quickDischargePatient() {
   });
 }
 
+// ══════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════
 renderRequests();
 updateStats();
 initVitalSignsData();
